@@ -1,1 +1,0 @@
-# Wireless-Capsule-Endoscopy
