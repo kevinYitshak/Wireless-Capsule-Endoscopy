@@ -94,6 +94,7 @@ class wce_angioectasias(object):
 
         self.end_epoch = 30
         
+        self.best_score = 0
         self.val_loss_meter = AverageMeter()
         self.val_dice_coeff_meter = AverageMeter()
         self.train_loss_meter = AverageMeter()
@@ -142,7 +143,6 @@ class wce_angioectasias(object):
 
     def val(self):
 
-        self.best_score = 0
         self.model.eval()
         tbar = tqdm(self.val_queue)
         
