@@ -11,7 +11,8 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms, utils
 import torchvision.transforms as transforms
 
-from Unet_Angioectasias import UNet
+from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net
+from dataloader import Angioectasias
 
 
 class ReadImages(Dataset):
@@ -47,6 +48,7 @@ class test_class(object):
         self.abnormality = abnormality
         self._init_device()
         self._init_model()
+        self._init_dataset()
 
     def _init_device(self):
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -60,12 +62,20 @@ class test_class(object):
             cudnn.benchmark = True
             self.device = torch.device('cuda:{}'.format(0))
 
+    def _init_dataset(self):
+
+        test_images = Angioectasias(self.abnormality, mode='test')
+        self.test_queue = DataLoader(test_images, batch_size=1, drop_last=False)
+
     def _init_model(self):
 
-        model = UNet(in_channels=3, out_channels=1)
+        model = AttU_Net(img_ch=3, output_ch=1)
         self.model = model.to(self.device)
     
-    def test(self, save_path, input_files, test_queue):
+    def test(self):
+        test_path = './' + abnormality + '/train/images'
+        input_files = natsorted(os.listdir(test_path))
+        save_path = './' + abnormality + '/pred/'
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
@@ -74,7 +84,7 @@ class test_class(object):
         self.model.eval()
 
         with torch.no_grad():
-            for k, img in enumerate(tqdm(test_queue)):
+            for k, img in enumerate(tqdm(self.test_queue)):
 
                 img = img.to(self.device, dtype=torch.float32)
                 out = self.model(img)
@@ -87,19 +97,11 @@ class test_class(object):
                 out = out * 255
                 out.astype('uint8')
                 cv2.imwrite(save_path + input_files[k], out)
+        
+        print('DONE TESTING')
 
 if __name__ == '__main__':
 
     abnormality = 'ampulla-of-vater'
     test = test_class(abnormality)
-
-    test_path = './' + abnormality + '/test/images'   
-    test_images = ReadImages(test_path)
-    test_queue = DataLoader(test_images, batch_size=1, drop_last=False)
-
-    save_path = './' + abnormality +'/pred/'
-    input_files = natsorted(os.listdir(test_path))
-
-    test.test(save_path, input_files, test_queue)
-    
-    
+    test.test()  

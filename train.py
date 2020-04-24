@@ -85,7 +85,7 @@ class wce_angioectasias(object):
 
     def _init_dataset(self):
 
-        train_img = Angioectasias(self.abnormality)
+        train_img = Angioectasias(self.abnormality, mode='train')
         num_train = len(train_img)
         indices = list(range(num_train))
         split = int(np.floor(0.9 * num_train))
@@ -214,13 +214,14 @@ class wce_angioectasias(object):
             # self.dice_score = 1 - self.dice(pred, target)
             self.val_loss_meter.update(self.loss.item(), input.size(0))
 
+            ###########CAL METRIC############
             SE, SPE, ACC, DICE = metrics(pred, target)
 
             self.val_accuracy.update(ACC, input.size(0))
             self.val_sensitivity.update(SE, input.size(0))
             self.val_specificity.update(SPE, input.size(0))
             self.val_dice.update(DICE, input.size(0))
-
+            #################################
             tbar.set_description('Val_Loss: {:.4f}; Val_Dice: {:.4f}'.format(self.val_loss_meter.mloss, self.val_dice.mloss))
 
             self.writer.add_images('Images', input, self.epoch)

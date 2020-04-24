@@ -12,13 +12,20 @@ from torchvision import transforms, utils
 
 class Angioectasias(Dataset):
 
-    def __init__(self, abnormality):
+    def __init__(self, abnormality, mode):
         super(Angioectasias, self).__init__()
 
         self.abnormality = abnormality
-        self.img_path = './' + self.abnormality + '/train/images'
-        self.mask_path = './' + self.abnormality + '/train/masks'
+        self.mode = mode 
+
+        if self.mode == 'train':
+            self.img_path = './' + self.abnormality + '/train/images'
+            self.mask_path = './' + self.abnormality + '/train/masks'
         
+        if self.mode == 'test':
+            self.img_path = './' + self.abnormality + '/test/images'
+            self.mask_path = './' + self.abnormality + '/test/masks'
+
         self.images = natsorted(os.listdir(self.img_path))
         print(self.images)
 
