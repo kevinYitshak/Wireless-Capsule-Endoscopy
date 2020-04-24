@@ -60,7 +60,6 @@ class test_class(object):
             cudnn.benchmark = True
             self.device = torch.device('cuda:{}'.format(0))
 
-
     def _init_model(self):
 
         model = UNet(in_channels=3, out_channels=1)
@@ -81,7 +80,7 @@ class test_class(object):
                 out = self.model(img)
 
                 out = torch.sigmoid(out)
-                out = (out > 0.5).float()
+                out = (out).float()
 
                 out = out[0].cpu().numpy()
                 out = np.transpose(out, (1, 2, 0))

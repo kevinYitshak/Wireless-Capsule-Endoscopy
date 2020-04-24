@@ -17,18 +17,36 @@ from torch.autograd import Variable
 from torchsummary import summary
 from torch import optim
 from tensorboardX import SummaryWriter
-# from torch.utils.tensorboard import SummaryWriter
+from torch.nn import init
 
 from dataloader import Angioectasias
-#from Unet_Angioectasias import UNet
+from metrics import * 
 from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net
 from loss import DiceLoss
-from dice_loss import dice_coeff
-# from util.utils import store_images
 
-def weights_init(m):
-    if isinstance(m, torch.nn.Conv2d):
-        torch.nn.init.kaiming_normal_(m.weight)
+def init_weights(net, init_type='normal', gain=0.02):
+    def init_func(m):
+        classname = m.__class__.__name__
+        if hasattr(m, 'weight') and (classname.find('Conv') != -1 or classname.find('Linear') != -1):
+            if init_type == 'normal':
+                init.normal_(m.weight.data, 0.0, gain)
+            elif init_type == 'xavier':
+                init.xavier_normal_(m.weight.data, gain=gain)
+            elif init_type == 'kaiming':
+                init.kaiming_normal_(m.weight.data, a=0, mode='fan_in')
+            elif init_type == 'orthogonal':
+                init.orthogonal_(m.weight.data, gain=gain)
+            else:
+                raise NotImplementedError(
+                    'initialization method [%s] is not implemented' % init_type)
+            if hasattr(m, 'bias') and m.bias is not None:
+                init.constant_(m.bias.data, 0.0)
+        elif classname.find('BatchNorm2d') != -1:
+            init.normal_(m.weight.data, 1.0, gain)
+            init.constant_(m.bias.data, 0.0)
+
+    print('initialize network with %s' % init_type)
+    net.apply(init_func)
 
 class wce_angioectasias(object):
 
@@ -85,8 +103,8 @@ class wce_angioectasias(object):
         self.criterion = criterion.to(self.device)
 
         model = AttU_Net(img_ch=3, output_ch=1)
-        self.model = model.to(self.device)   
-#        self.model.apply(weights_init)
+        self.model = model.to(self.device)
+        init_weights(self.model, 'kaiming', gain=0.02)
         # summary(self.model, input_size=(4, 448, 448))
         self.model_optimizer = optim.Adamax(model.parameters(), lr=2e-3)
 
@@ -95,9 +113,19 @@ class wce_angioectasias(object):
         self.end_epoch = 30
         
         self.best_score = 0
+        #val_meter
         self.val_loss_meter = AverageMeter()
         self.val_dice_coeff_meter = AverageMeter()
+        self.val_accuracy = AverageMeter()
+        self.val_sensitivity = AverageMeter()
+        self.val_specificity = AverageMeter()
+
+        #train_meter
         self.train_loss_meter = AverageMeter()
+        self.train_accuracy = AverageMeter()
+        self.train_sensitivity = AverageMeter()
+        self.train_specificity = AverageMeter()
+        self.tr_dice = AverageMeter()
 
         for epoch in range(self.end_epoch):
             
@@ -108,11 +136,24 @@ class wce_angioectasias(object):
 
             self.val()
 
+            #val
             self.val_loss_meter.reset()
-            self.train_loss_meter.reset()
             self.val_dice_coeff_meter.reset()
+            self.val_accuracy.reset()
+            self.val_sensitivity.reset()
+            self.val_specificity.reset()
+
+            #train
+            self.train_loss_meter.reset()
+            self.train_accuracy.reset()
+            self.train_sensitivity.reset()
+            self.train_specificity.reset()
+            self.tr_dice.reset()
 
         self.writer.close()
+
+        print('Best_Dice: {:.4f}, Best_Sen: {:.4f}, Best_epoch: {}' \
+            .format(self.best_dice, self.best_sen, self.best_epoch))
 
     def train(self):
 
@@ -120,14 +161,14 @@ class wce_angioectasias(object):
         tbar = tqdm(self.train_queue)
         for step, (input, target) in enumerate(tbar):
 
-            input = input.to(device=self.device, dtype=torch.float32)
-            target = target.to(device=self.device, dtype=torch.float32)
+            input = input.to(device=self.device)#, dtype=torch.float32)
+            target = target.to(device=self.device)#, dtype=torch.float32)
             
             predicts = self.model(input)
-            predicts = torch.sigmoid(predicts)
+            predicts_prob = torch.sigmoid(predicts)
             self.dice = DiceLoss()
-            self.loss = (0.75 * self.criterion(predicts, target) 
-                        + 0.25 * self.dice(predicts, target))
+            self.loss = (0.75 * self.criterion(predicts_prob, target) 
+                        + 0.25 * self.dice(predicts_prob, target))
 
             self.train_loss_meter.update(self.loss.item(), input.size(0))
 
@@ -135,10 +176,25 @@ class wce_angioectasias(object):
             self.loss.backward()
             self.model_optimizer.step()
 
+            self.accuracy = get_accuracy(predicts,target)
+            self.sensitivity = get_sensitivity(predicts, target)
+            self.specificity = get_specificity(predicts, target)
+            self.train_dice = get_DC(predicts, target)
+
+            self.train_accuracy.update(self.accuracy, input.size(0))
+            self.train_sensitivity.update(self.sensitivity, input.size(0))
+            self.train_specificity.update(self.specificity, input.size(0))
+            self.tr_dice.update(self.train_dice, input.size(0))
+
             # print('Epoch_loss: ', self.train_loss_meter.mloss)
             tbar.set_description('train loss: %.4f' % (self.train_loss_meter.mloss))
 
         self.writer.add_scalar('Train/loss', self.train_loss_meter.mloss, self.epoch)
+        self.writer.add_scalar('Train/Acc', self.train_accuracy.mloss, self.epoch)
+        self.writer.add_scalar('Train/Sen', self.train_sensitivity.mloss, self.epoch)
+        self.writer.add_scalar('Train/Spe', self.train_specificity.mloss, self.epoch)
+        self.writer.add_scalar('Train/Dice', self.tr_dice.mloss, self.epoch)
+
         print('Total_parameters: ', torch.sum(list(self.model.parameters())[0]))
 
     def val(self):
@@ -148,26 +204,40 @@ class wce_angioectasias(object):
         
         for step, (input, target) in enumerate(tbar):
 
-            input = input.to(device=self.device, dtype=torch.float32)
-            target = target.to(device=self.device, dtype=torch.float32)
+            input = input.to(device=self.device)#, dtype=torch.float32)
+            target = target.to(device=self.device)#, dtype=torch.float32)
 
             pred = self.model(input)
 
             pred = torch.sigmoid(pred)
             self.loss = self.criterion(pred, target)
             # self.dice = dice_coeff(pred, target.squeeze(dim=1))
-            pred = (pred > .5).float()
-            self.dice_score = 1 - self.dice(pred, target)
+            # pred = (pred > .5).float()
+            # self.dice_score = 1 - self.dice(pred, target)
             self.val_loss_meter.update(self.loss.item(), input.size(0))
-            self.val_dice_coeff_meter.update(self.dice_score.item(), input.size(0))
-            
+
+            self.accuracy = get_accuracy(pred, target)
+            self.sensitivity = get_sensitivity(pred, target)
+            self.specificity = get_specificity(pred, target)
+            self.dice = get_DC(pred, target)
+
+            self.val_accuracy.update(self.accuracy, input.size(0))
+            self.val_sensitivity.update(self.sensitivity, input.size(0))
+            self.val_specificity.update(self.specificity, input.size(0))
+            self.val_dice_coeff_meter.update(self.dice, input.size(0))
+
             tbar.set_description('Val_Loss: {}; Val_Dice: {}'.format(self.val_loss_meter.mloss, self.val_dice_coeff_meter.mloss))
 
             self.writer.add_images('Images', input, self.epoch)
             self.writer.add_images('Masks/True', target, self.epoch)
             self.writer.add_images('Masks/pred', pred, self.epoch)
 
-        if self.dice_score > self.best_score:
+        if (self.dice + self.val_sensitivity) > self.best_score:
+            self.best_score = self.dice + self.val_sensitivity
+            self.best_dice = self.dice
+            self.best_sen = self.val_sensitivity
+            self.best_epoch = self.epoch
+
             ckpt_file_path = self.path + '/ckpt/ckpt_{}.pth.tar'.format(self.epoch+1)
             torch.save(
                 {
@@ -177,6 +247,9 @@ class wce_angioectasias(object):
 
         self.writer.add_scalar('Val/Loss', self.val_loss_meter.mloss, self.epoch)
         self.writer.add_scalar('Val/Dice', self.val_dice_coeff_meter.mloss, self.epoch)
+        self.writer.add_scalar('Val/Acc', self.val_accuracy.mloss, self.epoch)
+        self.writer.add_scalar('Val/Sen', self.val_sensitivity.mloss, self.epoch)
+        self.writer.add_scalar('Val/Spe', self.val_specificity.mloss, self.epoch)
     
 class AverageMeter(object):
 
