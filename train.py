@@ -20,7 +20,7 @@ from tensorboardX import SummaryWriter
 from torch.nn import init
 
 from dataloader import Angioectasias
-from metrics import * 
+from conf_mat import metrics
 from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net
 from loss import DiceLoss
 
@@ -115,7 +115,7 @@ class wce_angioectasias(object):
         self.best_score = 0
         #val_meter
         self.val_loss_meter = AverageMeter()
-        self.val_dice_coeff_meter = AverageMeter()
+        self.val_dice = AverageMeter()
         self.val_accuracy = AverageMeter()
         self.val_sensitivity = AverageMeter()
         self.val_specificity = AverageMeter()
@@ -134,21 +134,21 @@ class wce_angioectasias(object):
 
             self.train()
 
-            self.val()
-
-            #val
-            self.val_loss_meter.reset()
-            self.val_dice_coeff_meter.reset()
-            self.val_accuracy.reset()
-            self.val_sensitivity.reset()
-            self.val_specificity.reset()
-
             #train
             self.train_loss_meter.reset()
             self.train_accuracy.reset()
             self.train_sensitivity.reset()
             self.train_specificity.reset()
             self.tr_dice.reset()
+
+            self.val()
+
+            #val
+            self.val_loss_meter.reset()
+            self.val_dice.reset()
+            self.val_accuracy.reset()
+            self.val_sensitivity.reset()
+            self.val_specificity.reset()
 
         self.writer.close()
 
@@ -161,8 +161,8 @@ class wce_angioectasias(object):
         tbar = tqdm(self.train_queue)
         for step, (input, target) in enumerate(tbar):
 
-            input = input.to(device=self.device)#, dtype=torch.float32)
-            target = target.to(device=self.device)#, dtype=torch.float32)
+            input = input.to(device=self.device, dtype=torch.float32)
+            target = target.to(device=self.device, dtype=torch.float32)
             
             predicts = self.model(input)
             predicts_prob = torch.sigmoid(predicts)
@@ -176,17 +176,15 @@ class wce_angioectasias(object):
             self.loss.backward()
             self.model_optimizer.step()
 
-            self.accuracy = get_accuracy(predicts,target)
-            self.sensitivity = get_sensitivity(predicts, target)
-            self.specificity = get_specificity(predicts, target)
-            self.train_dice = get_DC(predicts, target)
+            ###########CAL METRIC############
+            SE, SPE, ACC, DICE = metrics(predicts, target)
 
-            self.train_accuracy.update(self.accuracy, input.size(0))
-            self.train_sensitivity.update(self.sensitivity, input.size(0))
-            self.train_specificity.update(self.specificity, input.size(0))
-            self.tr_dice.update(self.train_dice, input.size(0))
+            self.train_accuracy.update(ACC, input.size(0))
+            self.train_sensitivity.update(SE, input.size(0))
+            self.train_specificity.update(SPE, input.size(0))
+            self.tr_dice.update(DICE, input.size(0))
+            #################################
 
-            # print('Epoch_loss: ', self.train_loss_meter.mloss)
             tbar.set_description('train loss: %.4f' % (self.train_loss_meter.mloss))
 
         self.writer.add_scalar('Train/loss', self.train_loss_meter.mloss, self.epoch)
@@ -204,8 +202,8 @@ class wce_angioectasias(object):
         
         for step, (input, target) in enumerate(tbar):
 
-            input = input.to(device=self.device)#, dtype=torch.float32)
-            target = target.to(device=self.device)#, dtype=torch.float32)
+            input = input.to(device=self.device, dtype=torch.float32)
+            target = target.to(device=self.device, dtype=torch.float32)
 
             pred = self.model(input)
 
@@ -216,25 +214,22 @@ class wce_angioectasias(object):
             # self.dice_score = 1 - self.dice(pred, target)
             self.val_loss_meter.update(self.loss.item(), input.size(0))
 
-            self.accuracy = get_accuracy(pred, target)
-            self.sensitivity = get_sensitivity(pred, target)
-            self.specificity = get_specificity(pred, target)
-            self.dice = get_DC(pred, target)
+            SE, SPE, ACC, DICE = metrics(pred, target)
 
-            self.val_accuracy.update(self.accuracy, input.size(0))
-            self.val_sensitivity.update(self.sensitivity, input.size(0))
-            self.val_specificity.update(self.specificity, input.size(0))
-            self.val_dice_coeff_meter.update(self.dice, input.size(0))
+            self.val_accuracy.update(ACC, input.size(0))
+            self.val_sensitivity.update(SE, input.size(0))
+            self.val_specificity.update(SPE, input.size(0))
+            self.val_dice.update(DICE, input.size(0))
 
-            tbar.set_description('Val_Loss: {}; Val_Dice: {}'.format(self.val_loss_meter.mloss, self.val_dice_coeff_meter.mloss))
+            tbar.set_description('Val_Loss: {:.4f}; Val_Dice: {:.4f}'.format(self.val_loss_meter.mloss, self.val_dice.mloss))
 
             self.writer.add_images('Images', input, self.epoch)
             self.writer.add_images('Masks/True', target, self.epoch)
-            self.writer.add_images('Masks/pred', pred, self.epoch)
+            self.writer.add_images('Masks/pred', (pred > .5).float(), self.epoch)
 
-        if (self.dice + self.val_sensitivity) > self.best_score:
-            self.best_score = self.dice + self.val_sensitivity
-            self.best_dice = self.dice
+        if (self.val_dice.mloss + self.val_sensitivity.mloss) > self.best_score:
+            self.best_score = self.val_dice.mloss + self.val_sensitivity.mloss
+            self.best_dice = self.val_dice.mloss
             self.best_sen = self.val_sensitivity
             self.best_epoch = self.epoch
 
@@ -246,7 +241,7 @@ class wce_angioectasias(object):
                 }, ckpt_file_path)
 
         self.writer.add_scalar('Val/Loss', self.val_loss_meter.mloss, self.epoch)
-        self.writer.add_scalar('Val/Dice', self.val_dice_coeff_meter.mloss, self.epoch)
+        self.writer.add_scalar('Val/Dice', self.val_dice.mloss, self.epoch)
         self.writer.add_scalar('Val/Acc', self.val_accuracy.mloss, self.epoch)
         self.writer.add_scalar('Val/Sen', self.val_sensitivity.mloss, self.epoch)
         self.writer.add_scalar('Val/Spe', self.val_specificity.mloss, self.epoch)
@@ -257,10 +252,10 @@ class AverageMeter(object):
         self.reset()
 
     def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
+        self.val = 0.
+        self.avg = 0.
+        self.sum = 0.
+        self.count = 0.
 
     def update(self, val, n=1):
         self.val = val
