@@ -14,34 +14,6 @@ import torchvision.transforms as transforms
 from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net
 from dataloader import Angioectasias
 
-
-class ReadImages(Dataset):
-
-        def __init__(self, path):
-            super(ReadImages).__init__()
-
-            self.path = path
-            self.images = natsorted(os.listdir(self.path))
-            self.transform = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-            ])
-
-        def __len__(self):
-            return len(self.images)
-
-        def __getitem__(self, index):
-            img = cv2.imread(os.path.join(self.path, self.images[index]))
-            img = cv2.resize(img, (448, 448), interpolation=cv2.INTER_CUBIC)
-            # img_cie = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-            # img_l, img_a, img_b = cv2.split(img_cie)
-            # img_a = np.expand_dims(img_a, axis=-1)
-            # img = np.concatenate((img, img_a), axis=-1)
-            img = img.astype('uint8')
-            img = self.transform(img)
-            return img
-
 class test_class(object):
 
     def __init__(self, abnormality):
