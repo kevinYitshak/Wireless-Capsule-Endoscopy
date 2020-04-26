@@ -11,6 +11,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms, utils
 import torchvision.transforms as transforms
+import torch.backends.cudnn as cudnn
 
 from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net
 from dataloader import Angioectasias
@@ -74,10 +75,10 @@ class test_class(object):
                 out = torch.sigmoid(out)
                 SE, SPE, ACC, DICE = metrics(out, target)
 
-                self.test_accuracy.update(ACC, input.size(0))
-                self.test_sensitivity.update(SE, input.size(0))
-                self.test_specificity.update(SPE, input.size(0))
-                self.test_dice.update(DICE, input.size(0))
+                self.test_accuracy.update(ACC, img.size(0))
+                self.test_sensitivity.update(SE, img.size(0))
+                self.test_specificity.update(SPE, img.size(0))
+                self.test_dice.update(DICE, img.size(0))
 
                 out = out[0].cpu().numpy()
                 out = np.transpose(out, (1, 2, 0))

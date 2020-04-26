@@ -40,6 +40,8 @@ class Angioectasias(Dataset):
             self._tensor = transforms.ToTensor()
             self._norm = transforms.Normalize(mean=[.5, .5, .5], std=[.5, .5, .5])
         else:
+            self._pil = transforms.ToPILImage()
+            self._tensor = transforms.ToTensor()
             self.transform = transforms.Compose([
                 transforms.ToPILImage(),
                 transforms.ToTensor(),
@@ -95,6 +97,6 @@ class Angioectasias(Dataset):
         else:
             img = self.transform(img)
             mask = self._pil(mask)
-            masl = self._tensor(mask)
+            mask = self._tensor(mask)
 
         return img, mask
