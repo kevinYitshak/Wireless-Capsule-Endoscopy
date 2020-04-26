@@ -94,6 +94,7 @@ class Angioectasias(Dataset):
 
         else:
             img = self.transform(img)
-            mask = self.transform(mask)
+            mask = self._pil(mask)
+            masl = self._tensor(mask)
 
         return img, mask

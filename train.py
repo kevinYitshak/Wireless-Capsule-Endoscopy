@@ -174,8 +174,8 @@ class wce_angioectasias(object):
             predicts = self.model(input)
             predicts_prob = torch.sigmoid(predicts)
             self.dice = DiceLoss()
-            self.loss = (.5 * self.criterion(predicts_prob, target)
-                        + .5 * self.dice(predicts_prob, target))
+            self.loss = (.75 * self.criterion(predicts_prob, target)
+                        + .25 * self.dice(predicts_prob, target))
 
             self.train_loss_meter.update(self.loss.item(), input.size(0))
 

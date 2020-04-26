@@ -5,7 +5,7 @@ import numpy as np
 import os
 from natsort import natsorted
 from tqdm import tqdm
-from utils import AverageMeter, metrics
+from utils import AverageMeter, metrics 
 
 import torch 
 from torch.utils.data import DataLoader, Dataset
@@ -56,7 +56,8 @@ class test_class(object):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        self.model.load_state_dict(torch.load('./' + self.abnormality + '/ckpt/ckpt_82.pth.tar')['state_dict'])
+        self.model.load_state_dict(torch.load('./' + self.abnormality + '/2020-04-26~10:31:50' \
+            + '/ckpt/best_weights.pth.tar')['state_dict'])
         self.model.eval()
 
         self.test_dice = AverageMeter()
