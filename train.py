@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 from datetime import datetime
+from utils import AverageMeter, metrics
+from dataloader import Angioectasias
 
 import torch
 import torchvision
@@ -19,8 +21,6 @@ from torch import optim
 from tensorboardX import SummaryWriter
 from torch.nn import init
 
-from dataloader import Angioectasias
-from conf_mat import metrics
 from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net
 from loss import DiceLoss
 
@@ -86,31 +86,36 @@ class wce_angioectasias(object):
     def _init_dataset(self):
 
         train_img = Angioectasias(self.abnormality, mode='train')
-        num_train = len(train_img)
-        indices = list(range(num_train))
-        split = int(np.floor(0.9 * num_train))
+        val_img = Angioectasias(self.abnormality, mode='val')
+        # num_train = len(train_img)
+        # indices = list(range(num_train))
+        # split = int(np.floor(0.9 * num_train))
         self.batch_size = 2
         self.train_queue = data.DataLoader(train_img, batch_size=self.batch_size,
-                            drop_last=False,
-                            sampler=torch.utils.data.sampler.SubsetRandomSampler(indices[:split]))
+                            drop_last=False, shuffle=True)
 
-        self.val_queue = data.DataLoader(train_img, batch_size=self.batch_size,
-                            sampler=torch.utils.data.sampler.SubsetRandomSampler(indices[split:num_train]))
+        self.val_queue = data.DataLoader(val_img, batch_size=self.batch_size, shuffle=True)
 
     def _init_model(self):
 
         criterion = nn.BCELoss() #nn.BCEWithLogitsLoss()
         self.criterion = criterion.to(self.device)
 
-        model = AttU_Net(img_ch=3, output_ch=1)
+        if self.abnormality == 'polypoids':
+            model = AttU_Net(img_ch=4, output_ch=1)
+        else:
+            model = AttU_Net(img_ch=3, output_ch=1)
+
         self.model = model.to(self.device)
         init_weights(self.model, 'kaiming', gain=0.02)
         # summary(self.model, input_size=(4, 448, 448))
-        self.model_optimizer = optim.Adamax(model.parameters(), lr=2e-3)
+        self.model_optimizer = optim.Adam(model.parameters(), lr=1e-3)
+        self.scheduler = optim.lr_scheduler.CosineAnnealingLR(
+            self.model_optimizer, T_max=len(self.train_queue))
 
     def run(self):
 
-        self.end_epoch = 30
+        self.end_epoch = 100
         
         self.best_score = 0
         #val_meter
@@ -133,7 +138,9 @@ class wce_angioectasias(object):
             print('Epoch: %d/%d' % (self.epoch + 1, self.end_epoch))
 
             self.train()
-
+            self.scheduler.step()
+            print('Decay LR: ', self.scheduler.get_lr())
+            
             #train
             self.train_loss_meter.reset()
             self.train_accuracy.reset()
@@ -167,8 +174,8 @@ class wce_angioectasias(object):
             predicts = self.model(input)
             predicts_prob = torch.sigmoid(predicts)
             self.dice = DiceLoss()
-            self.loss = (0.75 * self.criterion(predicts_prob, target) 
-                        + 0.25 * self.dice(predicts_prob, target))
+            self.loss = (.5 * self.criterion(predicts_prob, target)
+                        + .5 * self.dice(predicts_prob, target))
 
             self.train_loss_meter.update(self.loss.item(), input.size(0))
 
@@ -226,15 +233,15 @@ class wce_angioectasias(object):
 
             self.writer.add_images('Images', input, self.epoch)
             self.writer.add_images('Masks/True', target, self.epoch)
-            self.writer.add_images('Masks/pred', (pred > .5).float(), self.epoch)
+            self.writer.add_images('Masks/pred', pred, self.epoch)
 
         if (self.val_dice.mloss + self.val_sensitivity.mloss) > self.best_score:
             self.best_score = self.val_dice.mloss + self.val_sensitivity.mloss
             self.best_dice = self.val_dice.mloss
-            self.best_sen = self.val_sensitivity
+            self.best_sen = self.val_sensitivity.mloss
             self.best_epoch = self.epoch
 
-            ckpt_file_path = self.path + '/ckpt/ckpt_{}.pth.tar'.format(self.epoch+1)
+            ckpt_file_path = self.path + '/ckpt/best_weights.pth.tar'
             torch.save(
                 {
                 'epoch': self.epoch,
@@ -246,27 +253,6 @@ class wce_angioectasias(object):
         self.writer.add_scalar('Val/Acc', self.val_accuracy.mloss, self.epoch)
         self.writer.add_scalar('Val/Sen', self.val_sensitivity.mloss, self.epoch)
         self.writer.add_scalar('Val/Spe', self.val_specificity.mloss, self.epoch)
-    
-class AverageMeter(object):
-
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.val = 0.
-        self.avg = 0.
-        self.sum = 0.
-        self.count = 0.
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-    @property
-    def mloss(self):
-        return self.avg
 
 if __name__ == '__main__':
 
