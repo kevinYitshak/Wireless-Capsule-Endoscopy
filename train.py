@@ -7,6 +7,7 @@ from tqdm import tqdm
 from datetime import datetime
 from utils import AverageMeter, metrics
 from dataloader import Angioectasias
+from natsort import natsorted
 
 import torch
 import torchvision
@@ -61,7 +62,7 @@ class wce_angioectasias(object):
 
     def _init_logger(self):
 
-        self.d = datetime.now().strftime('%Y-%m-%d~%H:%M:%S')
+        self.d = datetime.now().strftime('%Y-%m-%d')
         self.path = './' + self.abnormality + '/'+ self.d
 
         os.makedirs(self.path + '/ckpt')
@@ -90,7 +91,7 @@ class wce_angioectasias(object):
         # num_train = len(train_img)
         # indices = list(range(num_train))
         # split = int(np.floor(0.9 * num_train))
-        self.batch_size = 2
+        self.batch_size = 4
         self.train_queue = data.DataLoader(train_img, batch_size=self.batch_size,
                             drop_last=False, shuffle=True)
 
@@ -107,15 +108,15 @@ class wce_angioectasias(object):
             model = AttU_Net(img_ch=3, output_ch=1)
 
         self.model = model.to(self.device)
-        init_weights(self.model, 'kaiming', gain=0.02)
+        init_weights(self.model, 'kaiming', gain=0.5)
         # summary(self.model, input_size=(4, 448, 448))
-        self.model_optimizer = optim.Adam(model.parameters(), lr=1e-3)
+        self.model_optimizer = optim.Adamax(model.parameters(), lr=1e-3)
         self.scheduler = optim.lr_scheduler.CosineAnnealingLR(
             self.model_optimizer, T_max=len(self.train_queue))
 
     def run(self):
 
-        self.end_epoch = 100
+        self.end_epoch = 50
         
         self.best_score = 0
         #val_meter
@@ -157,6 +158,7 @@ class wce_angioectasias(object):
             self.val_sensitivity.reset()
             self.val_specificity.reset()
 
+        self.test()
         self.writer.close()
 
         print('Best_Dice: {:.4f}, Best_Sen: {:.4f}, Best_epoch: {}' \
@@ -253,10 +255,57 @@ class wce_angioectasias(object):
         self.writer.add_scalar('Val/Acc', self.val_accuracy.mloss, self.epoch)
         self.writer.add_scalar('Val/Sen', self.val_sensitivity.mloss, self.epoch)
         self.writer.add_scalar('Val/Spe', self.val_specificity.mloss, self.epoch)
+    
+    def test(self):
+        test_images = Angioectasias(self.abnormality, mode='test')
+        self.test_queue = data.DataLoader(test_images, batch_size=1, drop_last=False)
+
+        test_path = './' + abnormality + '/test/images'
+        input_files = natsorted(os.listdir(test_path))
+        save_path = './' + abnormality + '/' + self.d + '/pred/'
+
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
+        self.model.load_state_dict(torch.load('./' + self.abnormality + '/' + self.d 
+                                              + '/ckpt/best_weights.pth.tar')['state_dict'])
+        self.model.eval()
+
+        self.test_dice = AverageMeter()
+        self.test_accuracy = AverageMeter()
+        self.test_sensitivity = AverageMeter()
+        self.test_specificity = AverageMeter()
+
+        with torch.no_grad():
+            for k, (img, target) in enumerate(tqdm(self.test_queue)):
+
+                img = img.to(self.device, dtype=torch.float32)
+                out = self.model(img)
+
+                out = torch.sigmoid(out)
+                SE, SPE, ACC, DICE = metrics(out, target)
+
+                self.test_accuracy.update(ACC, img.size(0))
+                self.test_sensitivity.update(SE, img.size(0))
+                self.test_specificity.update(SPE, img.size(0))
+                self.test_dice.update(DICE, img.size(0))
+
+                out = out[0].cpu().numpy()
+                out = np.transpose(out, (1, 2, 0))
+                out = out * 255
+                out.astype('uint8')
+                cv2.imwrite(save_path + input_files[k], out)
+
+        print('Acc: {:.4f}, Sen: {:.4f}, Spe: {:.4f}, Dice: {:.4f}'
+              .format(self.test_accuracy.mloss,
+                      self.test_sensitivity.mloss,
+                      self.test_specificity.mloss,
+                      self.test_dice.mloss))
 
 if __name__ == '__main__':
 
-    abnormality = ['ampulla-of-vater'] #'polypoids', 'vascular', 'inflammatory']
+    # 'polypoids', 'vascular', 'ampulla-of-vater', 'inflammatory'
+    abnormality = ['inflammatory']
 
     for name in abnormality:               
         train_network = wce_angioectasias(name)

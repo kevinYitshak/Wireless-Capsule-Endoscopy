@@ -5,12 +5,13 @@ import random
 from natsort import natsorted
 import numpy as np
 import cv2
-from PIL import Image 
+from PIL import Image
 
 import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms, utils
 from torchvision.transforms import functional as F
+
 
 class Angioectasias(Dataset):
 
@@ -35,19 +36,15 @@ class Angioectasias(Dataset):
             self._pil = transforms.ToPILImage()
             self._jitter = transforms.ColorJitter(brightness=.05, contrast=.05)
             self._grayscale = transforms.RandomGrayscale(p=0.3)
-            self._rotate = transforms.RandomRotation(
-                degrees=10, resample=Image.BICUBIC)
+            self._rotate = transforms.RandomRotation(degrees=10, resample=Image.BICUBIC)
             self._tensor = transforms.ToTensor()
-            self._norm = transforms.Normalize(mean=[.5, .5, .5], std=[.5, .5, .5])
-        else:
+            # self._norm = transforms.Normalize(mean=[.5, .5, .5], std=[.5, .5, .5])
+        
+        if self.mode == 'test':
             self._pil = transforms.ToPILImage()
             self._tensor = transforms.ToTensor()
-            self.transform = transforms.Compose([
-                transforms.ToPILImage(),
-                transforms.ToTensor(),
-                transforms.Normalize(mean=[.5, .5, .5], std=[.5, .5, .5])
-            ])
-        
+            # self._norm = transforms.Normalize(mean=[.5, .5, .5], std=[.5, .5, .5])
+
     def __len__(self):
         return len(self.images)
 
@@ -62,9 +59,7 @@ class Angioectasias(Dataset):
             img_a = np.expand_dims(img_a, axis=-1)
             img = np.concatenate((img, img_a), axis=-1)
 
-        img = img.astype('uint8')
-
-
+        img = img.astype('uint8')        
         mask_name = self.images[index].split('.')[0] + 'm.png'
         mask = cv2.imread(os.path.join(self.mask_path, mask_name), 0)
         mask = cv2.resize(mask, (448, 448))
@@ -76,7 +71,7 @@ class Angioectasias(Dataset):
             mask = self._pil(mask)
 
             # 2. augmentation
-            if 0.2 < random.random() < 0.8:
+            if 0.4 < random.random() < 0.6:
                 img = self._jitter(img)
                 img = self._grayscale(img)
                 img = self._rotate(img)
@@ -85,17 +80,19 @@ class Angioectasias(Dataset):
             if random.random() < 0.5:
                 img = F.hflip(img)
                 mask = F.hflip(mask)
-            
+
             if random.random() < 0.5:
                 img = F.vflip(img)
                 mask = F.vflip(mask)
-        
+
             img = self._tensor(img)
-            img = self._norm(img)
+            # img = self._norm(img)
             mask = self._tensor(mask)
 
         else:
-            img = self.transform(img)
+            img = self._pil(img)
+            img = self._tensor(img)
+            # img = self._norm(img)
             mask = self._pil(mask)
             mask = self._tensor(mask)
 
