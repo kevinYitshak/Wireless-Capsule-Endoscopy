@@ -62,11 +62,12 @@ class wce_angioectasias(object):
 
     def _init_logger(self):
 
-        self.d = datetime.now().strftime('%Y-%m-%d')
+        self.d = datetime.now().strftime('%Y-%m-%d~%H:%S:%M')
         self.path = './' + self.abnormality + '/'+ self.d
 
-        os.makedirs(self.path + '/ckpt')
-        os.makedirs(self.path + '/log')
+        if not os.path.exists(self.path + '/ckpt'):
+            os.makedirs(self.path + '/ckpt')
+            os.makedirs(self.path + '/log')
         self.save_tbx_log = self.path + '/log'
 
         self.writer = SummaryWriter(self.save_tbx_log)
@@ -91,7 +92,7 @@ class wce_angioectasias(object):
         # num_train = len(train_img)
         # indices = list(range(num_train))
         # split = int(np.floor(0.9 * num_train))
-        self.batch_size = 4
+        self.batch_size = 3
         self.train_queue = data.DataLoader(train_img, batch_size=self.batch_size,
                             drop_last=False, shuffle=True)
 
@@ -110,7 +111,7 @@ class wce_angioectasias(object):
         self.model = model.to(self.device)
         init_weights(self.model, 'kaiming', gain=0.5)
         # summary(self.model, input_size=(4, 448, 448))
-        self.model_optimizer = optim.Adamax(model.parameters(), lr=1e-3)
+        self.model_optimizer = optim.Adamax(model.parameters(), lr=1e-3, weight_decay=0.05)
         self.scheduler = optim.lr_scheduler.CosineAnnealingLR(
             self.model_optimizer, T_max=len(self.train_queue))
 
@@ -260,9 +261,9 @@ class wce_angioectasias(object):
         test_images = Angioectasias(self.abnormality, mode='test')
         self.test_queue = data.DataLoader(test_images, batch_size=1, drop_last=False)
 
-        test_path = './' + abnormality + '/test/images'
+        test_path = './' + self.abnormality + '/test/images'
         input_files = natsorted(os.listdir(test_path))
-        save_path = './' + abnormality + '/' + self.d + '/pred/'
+        save_path = './' + self.abnormality + '/' + self.d + '/pred/'
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
@@ -305,7 +306,7 @@ class wce_angioectasias(object):
 if __name__ == '__main__':
 
     # 'polypoids', 'vascular', 'ampulla-of-vater', 'inflammatory'
-    abnormality = ['inflammatory']
+    abnormality = ['polypoids']
 
     for name in abnormality:               
         train_network = wce_angioectasias(name)

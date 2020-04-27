@@ -6,6 +6,7 @@ from natsort import natsorted
 import numpy as np
 import cv2
 from PIL import Image
+from utils import mean_std
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -32,18 +33,27 @@ class Angioectasias(Dataset):
         self.images = natsorted(os.listdir(self.img_path))
         print(self.images)
 
+        self.mean, self.std = mean_std(self.img_path, self.images, self.abnormality)._read()
+        print('Mean: {}, Std: {}'.format(self.mean, self.std))
+
         if self.mode == 'train' or self.mode == 'val':
             self._pil = transforms.ToPILImage()
             self._jitter = transforms.ColorJitter(brightness=.05, contrast=.05)
             self._grayscale = transforms.RandomGrayscale(p=0.3)
             self._rotate = transforms.RandomRotation(degrees=10, resample=Image.BICUBIC)
             self._tensor = transforms.ToTensor()
-            # self._norm = transforms.Normalize(mean=[.5, .5, .5], std=[.5, .5, .5])
+            if self.abnormality == 'polypoids':
+                self._norm = transforms.Normalize(mean=self.mean, std=self.std)
+            else:
+                self._norm = transforms.Normalize(mean=self.mean, std=self.std)
         
         if self.mode == 'test':
             self._pil = transforms.ToPILImage()
             self._tensor = transforms.ToTensor()
-            # self._norm = transforms.Normalize(mean=[.5, .5, .5], std=[.5, .5, .5])
+            if self.abnormality == 'polypoids':
+                self._norm = transforms.Normalize(mean=self.mean, std=self.std)
+            else:
+                self._norm = transforms.Normalize(mean=self.mean, std=self.std)
 
     def __len__(self):
         return len(self.images)
@@ -71,12 +81,11 @@ class Angioectasias(Dataset):
             mask = self._pil(mask)
 
             # 2. augmentation
-            if 0.4 < random.random() < 0.6:
+            if 0.2 < random.random() < 0.8:
                 img = self._jitter(img)
-                img = self._grayscale(img)
                 img = self._rotate(img)
                 mask = self._rotate(mask)
-
+            
             if random.random() < 0.5:
                 img = F.hflip(img)
                 mask = F.hflip(mask)

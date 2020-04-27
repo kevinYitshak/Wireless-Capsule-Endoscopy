@@ -116,6 +116,7 @@ class U_Net(nn.Module):
         super(U_Net,self).__init__()
         
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)
+        self.dp = nn.Dropout(p=0.5)
 
         self.Conv1 = conv_block(ch_in=img_ch,ch_out=64)
         self.Conv2 = conv_block(ch_in=64,ch_out=128)
@@ -153,13 +154,14 @@ class U_Net(nn.Module):
 
         x5 = self.Maxpool(x4)
         x5 = self.Conv5(x5)
-
+        x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
         d5 = torch.cat((x4,d5),dim=1)
         
         d5 = self.Up_conv5(d5)
-        
+        d5 = self.dp(d5)
+
         d4 = self.Up4(d5)
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_conv4(d4)
@@ -183,6 +185,7 @@ class R2U_Net(nn.Module):
         
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)
         self.Upsample = nn.Upsample(scale_factor=2)
+        self.dp = nn.Dropout(p=0.5)
 
         self.RRCNN1 = RRCNN_block(ch_in=img_ch,ch_out=64,t=t)
 
@@ -225,12 +228,13 @@ class R2U_Net(nn.Module):
 
         x5 = self.Maxpool(x4)
         x5 = self.RRCNN5(x5)
-
+        x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
         d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_RRCNN5(d5)
-        
+        d5 = self.dp(x5)
+
         d4 = self.Up4(d5)
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_RRCNN4(d4)
@@ -254,6 +258,7 @@ class AttU_Net(nn.Module):
         super(AttU_Net,self).__init__()
         
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)
+        self.dp = nn.Dropout(p=0.5)
 
         self.Conv1 = conv_block(ch_in=img_ch,ch_out=64)
         self.Conv2 = conv_block(ch_in=64,ch_out=128)
@@ -295,13 +300,15 @@ class AttU_Net(nn.Module):
 
         x5 = self.Maxpool(x4)
         x5 = self.Conv5(x5)
+        x5 = self.dp(x5)
 
         # decoding + concat path
         d5 = self.Up5(x5)
         x4 = self.Att5(g=d5,x=x4)
         d5 = torch.cat((x4,d5),dim=1)        
         d5 = self.Up_conv5(d5)
-        
+        d5 = self.dp(d5)
+
         d4 = self.Up4(d5)
         x3 = self.Att4(g=d4,x=x3)
         d4 = torch.cat((x3,d4),dim=1)
@@ -328,6 +335,7 @@ class R2AttU_Net(nn.Module):
         
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)
         self.Upsample = nn.Upsample(scale_factor=2)
+        self.dp = nn.Dropout(p=0.5)
 
         self.RRCNN1 = RRCNN_block(ch_in=img_ch,ch_out=64,t=t)
 
@@ -374,12 +382,13 @@ class R2AttU_Net(nn.Module):
 
         x5 = self.Maxpool(x4)
         x5 = self.RRCNN5(x5)
-
+        x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
         x4 = self.Att5(g=d5,x=x4)
         d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_RRCNN5(d5)
+        d5 = self.dp(d5)
         
         d4 = self.Up4(d5)
         x3 = self.Att4(g=d4,x=x3)
