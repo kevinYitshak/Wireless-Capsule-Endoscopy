@@ -2,16 +2,97 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import segmentation_models_pytorch as smp
+
+'''
+smp.Unet(encoder_name='resnet34', encoder_depth=5, encoder_weights='imagenet', 
+        decoder_use_batchnorm=True, decoder_channels=(256, 128, 64, 32, 16), 
+        decoder_attention_type=None, in_channels=3, classes=1, activation=None, aux_params=None)
+
+smp.FPN(encoder_name='resnet34', encoder_depth=5, encoder_weights='imagenet', decoder_pyramid_channels=256, decoder_segmentation_channels=128,
+        decoder_merge_policy='add', decoder_dropout=0.2, in_channels=3, classes=1, activation=None, upsampling=4, aux_params=None)
+
+smp.Linknet(encoder_name='resnet34', encoder_depth=5, encoder_weights='imagenet',
+            decoder_use_batchnorm=True, in_channels=3, classes=1, activation=None, aux_params=None)
+
+smp.PSPNet(encoder_name='resnet34', encoder_weights='imagenet', encoder_depth=3, psp_out_channels=512,
+           psp_use_batchnorm=True, psp_dropout=0.2, in_channels=3, classes=1, activation=None, upsampling=8, aux_params=None)
+'''
+
+class Models(object):
+
+    def __init__(self, en_depth=5, 
+                de_usebn=True, de_attention='scse', encoder='xception',
+                en_weights='imagenet', de_py_ch=256,
+                de_seg=128, de_merge='add', de_dp=0.2, 
+                de_ch=(512, 256, 128, 64, 32), LN_upsample=4,
+                PSP_upsample=8, PSP_out_ch=512,
+                activation=None, aux_params=None):
+        super(Models, self).__init__()
+
+        self.encoder = encoder
+        self.en_depth = en_depth
+        self.en_weights = en_weights
+
+        self.de_bn = de_usebn
+        self.de_ch = de_ch
+        self.de_attention = de_attention
+        self.activation = activation
+
+    def Unet(self, img_ch, output_ch):
+        return smp.Unet(encoder_name=self.encoder, 
+                        encoder_depth=self.en_depth, 
+                        encoder_weights=self.en_weights, 
+                        decoder_use_batchnorm=self.de_bn, 
+                        decoder_channels=self.de_ch, 
+                        decoder_attention_type=self.de_attention, 
+                        in_channels=img_ch,
+                        classes=output_ch,
+                        activation=None)
+
+    def FPN(self, img_ch, output_ch):
+        return smp.FPN(encoder_name=self.encoder, 
+                        encoder_depth=self.en_depth,
+                        encoder_weights=self.en_weights, 
+                        decoder_pyramid_channels=256,
+                        decoder_segmentation_channels=128,
+                        decoder_merge_policy='add', 
+                        decoder_dropout=0.2, 
+                        in_channels=img_ch,
+                        classes=output_ch, activation=None,
+                        upsampling=4, aux_params=None)
+    
+    def Linknet(self, img_ch, output_ch):
+        return smp.Linknet(encoder_name=self.encoder, 
+                        encoder_depth=self.en_depth,
+                        encoder_weights=self.en_weights,
+                        decoder_use_batchnorm=False, 
+                        in_channels=img_ch,
+                        classes=output_ch, activation=None,
+                        aux_params=None)
+
+    def PSP(self, img_ch, output_ch):
+        return smp.PSPNet(encoder_name=self.encoder, 
+                        encoder_weights=self.en_weights,
+                        encoder_depth=3, 
+                        psp_out_channels=512,
+                        psp_use_batchnorm=False, 
+                        psp_dropout=0.2, 
+                        in_channels=img_ch,
+                        classes=output_ch, activation=None,
+                        upsampling=8, aux_params=None)
+
+
 class conv_block(nn.Module):
     def __init__(self,ch_in,ch_out):
         super(conv_block,self).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(ch_in, ch_out, kernel_size=3,stride=1,padding=1,bias=True),
             nn.BatchNorm2d(ch_out),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(ch_out, ch_out, kernel_size=3,stride=1,padding=1,bias=True),
+            nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True)
-            # nn.Conv2d(ch_out, ch_out, kernel_size=3,stride=1,padding=1,bias=True),
-            # nn.BatchNorm2d(ch_out),
-            # nn.ReLU(inplace=True)
         )
 
 
@@ -154,13 +235,13 @@ class U_Net(nn.Module):
 
         x5 = self.Maxpool(x4)
         x5 = self.Conv5(x5)
-        x5 = self.dp(x5)
+        # x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
         d5 = torch.cat((x4,d5),dim=1)
         
         d5 = self.Up_conv5(d5)
-        d5 = self.dp(d5)
+        # d5 = self.dp(d5)
 
         d4 = self.Up4(d5)
         d4 = torch.cat((x3,d4),dim=1)
@@ -228,12 +309,12 @@ class R2U_Net(nn.Module):
 
         x5 = self.Maxpool(x4)
         x5 = self.RRCNN5(x5)
-        x5 = self.dp(x5)
+        # x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
         d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_RRCNN5(d5)
-        d5 = self.dp(x5)
+        # d5 = self.dp(x5)
 
         d4 = self.Up4(d5)
         d4 = torch.cat((x3,d4),dim=1)
@@ -300,14 +381,14 @@ class AttU_Net(nn.Module):
 
         x5 = self.Maxpool(x4)
         x5 = self.Conv5(x5)
-        x5 = self.dp(x5)
+        #x5 = self.dp(x5)
 
         # decoding + concat path
         d5 = self.Up5(x5)
         x4 = self.Att5(g=d5,x=x4)
         d5 = torch.cat((x4,d5),dim=1)        
         d5 = self.Up_conv5(d5)
-        d5 = self.dp(d5)
+        #d5 = self.dp(d5)
 
         d4 = self.Up4(d5)
         x3 = self.Att4(g=d4,x=x3)
@@ -382,13 +463,13 @@ class R2AttU_Net(nn.Module):
 
         x5 = self.Maxpool(x4)
         x5 = self.RRCNN5(x5)
-        x5 = self.dp(x5)
+        # x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
         x4 = self.Att5(g=d5,x=x4)
         d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_RRCNN5(d5)
-        d5 = self.dp(d5)
+        # d5 = self.dp(d5)
         
         d4 = self.Up4(d5)
         x3 = self.Att4(g=d4,x=x3)

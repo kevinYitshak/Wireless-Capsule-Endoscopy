@@ -22,7 +22,7 @@ from torch import optim
 from tensorboardX import SummaryWriter
 from torch.nn import init
 
-from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net
+from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net, Models
 from loss import DiceLoss
 
 def init_weights(net, init_type='normal', gain=0.02):
@@ -62,7 +62,7 @@ class wce_angioectasias(object):
 
     def _init_logger(self):
 
-        self.d = datetime.now().strftime('%Y-%m-%d~%H:%S:%M')
+        self.d = datetime.now().strftime('%Y-%m-%d~%H:%M:%S')
         self.path = './' + self.abnormality + '/'+ self.d
 
         if not os.path.exists(self.path + '/ckpt'):
@@ -89,9 +89,6 @@ class wce_angioectasias(object):
 
         train_img = Angioectasias(self.abnormality, mode='train')
         val_img = Angioectasias(self.abnormality, mode='val')
-        # num_train = len(train_img)
-        # indices = list(range(num_train))
-        # split = int(np.floor(0.9 * num_train))
         self.batch_size = 3
         self.train_queue = data.DataLoader(train_img, batch_size=self.batch_size,
                             drop_last=False, shuffle=True)
@@ -100,18 +97,15 @@ class wce_angioectasias(object):
 
     def _init_model(self):
 
-        criterion = nn.BCELoss() #nn.BCEWithLogitsLoss()
+        criterion = nn.BCELoss()
         self.criterion = criterion.to(self.device)
-
-        if self.abnormality == 'polypoids':
-            model = AttU_Net(img_ch=4, output_ch=1)
-        else:
-            model = AttU_Net(img_ch=3, output_ch=1)
+        M = Models()
+        model = M.PSP(img_ch=3, output_ch=1)
 
         self.model = model.to(self.device)
-        init_weights(self.model, 'kaiming', gain=0.5)
+        # init_weights(self.model, 'kaiming', gain=1)
         # summary(self.model, input_size=(4, 448, 448))
-        self.model_optimizer = optim.Adamax(model.parameters(), lr=1e-3, weight_decay=0.05)
+        self.model_optimizer = optim.Adamax(model.parameters(), lr=1e-3, weight_decay=0.01)
         self.scheduler = optim.lr_scheduler.CosineAnnealingLR(
             self.model_optimizer, T_max=len(self.train_queue))
 
@@ -119,7 +113,7 @@ class wce_angioectasias(object):
 
         self.end_epoch = 50
         
-        self.best_score = 0
+        self.best_dice = 0
         #val_meter
         self.val_loss_meter = AverageMeter()
         self.val_dice = AverageMeter()
@@ -141,7 +135,7 @@ class wce_angioectasias(object):
 
             self.train()
             self.scheduler.step()
-            print('Decay LR: ', self.scheduler.get_lr())
+            # print('Decay LR: ', self.scheduler.get_lr())
             
             #train
             self.train_loss_meter.reset()
@@ -178,7 +172,7 @@ class wce_angioectasias(object):
             predicts_prob = torch.sigmoid(predicts)
             self.dice = DiceLoss()
             self.loss = (.75 * self.criterion(predicts_prob, target)
-                        + .25 * self.dice(predicts_prob, target))
+                        + .25 * self.dice((predicts_prob>0.5).float(), target))
 
             self.train_loss_meter.update(self.loss.item(), input.size(0))
 
@@ -187,7 +181,7 @@ class wce_angioectasias(object):
             self.model_optimizer.step()
 
             ###########CAL METRIC############
-            SE, SPE, ACC, DICE = metrics(predicts, target)
+            SE, SPE, ACC, DICE = metrics(predicts_prob, target)
 
             self.train_accuracy.update(ACC, input.size(0))
             self.train_sensitivity.update(SE, input.size(0))
@@ -195,7 +189,11 @@ class wce_angioectasias(object):
             self.tr_dice.update(DICE, input.size(0))
             #################################
 
-            tbar.set_description('train loss: %.4f' % (self.train_loss_meter.mloss))
+            tbar.set_description('loss: %.4f; dice: %.4f' % (self.train_loss_meter.mloss, self.tr_dice.mloss))
+
+            self.writer.add_images('Train/Images', input, self.epoch)
+            self.writer.add_images('Train/Masks/True', target, self.epoch)
+            self.writer.add_images('Train/Masks/pred', (predicts_prob > .5).float(), self.epoch)
 
         self.writer.add_scalar('Train/loss', self.train_loss_meter.mloss, self.epoch)
         self.writer.add_scalar('Train/Acc', self.train_accuracy.mloss, self.epoch)
@@ -203,7 +201,7 @@ class wce_angioectasias(object):
         self.writer.add_scalar('Train/Spe', self.train_specificity.mloss, self.epoch)
         self.writer.add_scalar('Train/Dice', self.tr_dice.mloss, self.epoch)
 
-        print('Total_parameters: ', torch.sum(list(self.model.parameters())[0]))
+        # print('Total_parameters: ', torch.sum(list(self.model.parameters())[0]))
 
     def val(self):
 
@@ -218,7 +216,8 @@ class wce_angioectasias(object):
             pred = self.model(input)
 
             pred = torch.sigmoid(pred)
-            self.loss = self.criterion(pred, target)
+            self.loss = (.75 * self.criterion(pred, target)
+                        + .25 * self.dice((pred>0.5).float(), target))
             # self.dice = dice_coeff(pred, target.squeeze(dim=1))
             # pred = (pred > .5).float()
             # self.dice_score = 1 - self.dice(pred, target)
@@ -234,12 +233,11 @@ class wce_angioectasias(object):
             #################################
             tbar.set_description('Val_Loss: {:.4f}; Val_Dice: {:.4f}'.format(self.val_loss_meter.mloss, self.val_dice.mloss))
 
-            self.writer.add_images('Images', input, self.epoch)
-            self.writer.add_images('Masks/True', target, self.epoch)
-            self.writer.add_images('Masks/pred', pred, self.epoch)
+            self.writer.add_images('Val/Images', input, self.epoch)
+            self.writer.add_images('Val/Masks/True', target, self.epoch)
+            self.writer.add_images('Val/Masks/pred', (pred>.5).float(), self.epoch)
 
-        if (self.val_dice.mloss + self.val_sensitivity.mloss) > self.best_score:
-            self.best_score = self.val_dice.mloss + self.val_sensitivity.mloss
+        if self.val_dice.mloss > self.best_dice:
             self.best_dice = self.val_dice.mloss
             self.best_sen = self.val_sensitivity.mloss
             self.best_epoch = self.epoch

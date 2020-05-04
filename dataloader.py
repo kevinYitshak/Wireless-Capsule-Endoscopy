@@ -6,7 +6,7 @@ from natsort import natsorted
 import numpy as np
 import cv2
 from PIL import Image
-from utils import mean_std
+from utils import mean_std, Augmentation
 
 import torch
 from torch.utils.data import DataLoader, Dataset
@@ -36,24 +36,18 @@ class Angioectasias(Dataset):
         self.mean, self.std = mean_std(self.img_path, self.images, self.abnormality)._read()
         print('Mean: {}, Std: {}'.format(self.mean, self.std))
 
-        if self.mode == 'train' or self.mode == 'val':
-            self._pil = transforms.ToPILImage()
-            self._jitter = transforms.ColorJitter(brightness=.05, contrast=.05)
-            self._grayscale = transforms.RandomGrayscale(p=0.3)
-            self._rotate = transforms.RandomRotation(degrees=10, resample=Image.BICUBIC)
-            self._tensor = transforms.ToTensor()
-            if self.abnormality == 'polypoids':
-                self._norm = transforms.Normalize(mean=self.mean, std=self.std)
-            else:
-                self._norm = transforms.Normalize(mean=self.mean, std=self.std)
+        if self.mode == 'train':
+            self.aug = Augmentation()
         
-        if self.mode == 'test':
-            self._pil = transforms.ToPILImage()
-            self._tensor = transforms.ToTensor()
-            if self.abnormality == 'polypoids':
-                self._norm = transforms.Normalize(mean=self.mean, std=self.std)
-            else:
-                self._norm = transforms.Normalize(mean=self.mean, std=self.std)
+        self._img = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=self.mean, std=self.std)
+        ])
+        self._mask = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.ToTensor()
+        ])
 
     def __len__(self):
         return len(self.images)
@@ -61,48 +55,22 @@ class Angioectasias(Dataset):
     def __getitem__(self, index):
 
         img = cv2.imread(os.path.join(self.img_path, self.images[index]))
-        img = cv2.resize(img, (448, 448))
-
-        if self.abnormality == 'polypoids':
-            img_cie = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
-            img_l, img_a, img_b = cv2.split(img_cie)
-            img_a = np.expand_dims(img_a, axis=-1)
-            img = np.concatenate((img, img_a), axis=-1)
-
-        img = img.astype('uint8')        
+        img = cv2.resize(img, (448, 448), interpolation=cv2.INTER_CUBIC)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2Lab)
+        
         mask_name = self.images[index].split('.')[0] + 'm.png'
         mask = cv2.imread(os.path.join(self.mask_path, mask_name), 0)
         mask = cv2.resize(mask, (448, 448))
-        _, mask = cv2.threshold(mask, 30, 255, cv2.THRESH_BINARY)
 
-        if self.mode == 'train' and self.mode == 'val':
-            # 1. to PIL
-            img = self._pil(img)
-            mask = self._pil(mask)
+        if self.mode == 'train':
+            _aug = self.aug._aug()
+            augmented = _aug(image=img, mask=mask)
+            img = augmented['image']
+            mask = augmented['mask']
 
-            # 2. augmentation
-            if 0.2 < random.random() < 0.8:
-                img = self._jitter(img)
-                img = self._rotate(img)
-                mask = self._rotate(mask)
-            
-            if random.random() < 0.5:
-                img = F.hflip(img)
-                mask = F.hflip(mask)
+        _, mask = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)
 
-            if random.random() < 0.5:
-                img = F.vflip(img)
-                mask = F.vflip(mask)
-
-            img = self._tensor(img)
-            # img = self._norm(img)
-            mask = self._tensor(mask)
-
-        else:
-            img = self._pil(img)
-            img = self._tensor(img)
-            # img = self._norm(img)
-            mask = self._pil(mask)
-            mask = self._tensor(mask)
+        img = self._img(img)
+        mask = self._mask(mask)
 
         return img, mask

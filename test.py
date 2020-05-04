@@ -13,7 +13,7 @@ from torchvision import transforms, utils
 import torchvision.transforms as transforms
 import torch.backends.cudnn as cudnn
 
-from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net
+from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net, Models
 from dataloader import Angioectasias
 
 class test_class(object):
@@ -42,11 +42,9 @@ class test_class(object):
         self.test_queue = DataLoader(test_images, batch_size=1, drop_last=False)
 
     def _init_model(self):
-
-        if self.abnormality == 'polypoids':
-            model = AttU_Net(img_ch=4, output_ch=1)
-        else:
-            model = AttU_Net(img_ch=3, output_ch=1)
+        
+        M = Models()
+        model = M.FPN(img_ch=3, output_ch=1)
         self.model = model.to(self.device)
     
     def test(self):
@@ -57,7 +55,7 @@ class test_class(object):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        self.model.load_state_dict(torch.load('./' + self.abnormality + '/2020-04-26~10:31:50' \
+        self.model.load_state_dict(torch.load('./' + self.abnormality + '/2020-04-30~07:18:12' \
             + '/ckpt/best_weights.pth.tar')['state_dict'])
         self.model.eval()
 
