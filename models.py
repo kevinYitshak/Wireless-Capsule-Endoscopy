@@ -22,7 +22,7 @@ smp.PSPNet(encoder_name='resnet34', encoder_weights='imagenet', encoder_depth=3,
 class Models(object):
 
     def __init__(self, en_depth=5, 
-                de_usebn=True, de_attention='scse', encoder='xception',
+                de_usebn=True, de_attention='scse', encoder='se_resnext50_32x4d',
                 en_weights='imagenet', de_py_ch=256,
                 de_seg=128, de_merge='add', de_dp=0.2, 
                 de_ch=(512, 256, 128, 64, 32), LN_upsample=4,

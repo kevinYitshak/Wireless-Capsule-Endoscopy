@@ -1,17 +1,19 @@
 #test.py
 
+import argparse
 import cv2
 import numpy as np
 import os
 from natsort import natsorted
 from tqdm import tqdm
-from utils import AverageMeter, metrics 
+from utils import AverageMeter, metrics, get_gpus_memory_info
 
 import torch 
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms, utils
 import torchvision.transforms as transforms
 import torch.backends.cudnn as cudnn
+import torch.nn as nn
 
 from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net, Models
 from dataloader import Angioectasias
@@ -20,31 +22,42 @@ class test_class(object):
 
     def __init__(self, abnormality):
         self.abnormality = abnormality
+        self._args()
         self._init_device()
         self._init_model()
         self._init_dataset()
 
-    def _init_device(self):
-        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    def _args(self):
 
-        if not torch.cuda.is_available():
-            print('GPU not available!')
-            self.device = 'cpu'
-        else:
-            print('GPU is available!')
-            cudnn.enabled = True
-            cudnn.benchmark = True
-            self.device = torch.device('cuda:{}'.format(0))
+        parser = argparse.ArgumentParser(description='config')
+        parser.add_argument('--mgpu', default=False,
+                            help='Set true to use multi GPUs')
+
+        self.args = parser.parse_args()
+
+
+    def _init_device(self):
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     def _init_dataset(self):
 
+        if self.args.mgpu:
+            self.batch_size = 28
+        else:
+            self.batch_size = 7
+
         test_images = Angioectasias(self.abnormality, mode='test')
-        self.test_queue = DataLoader(test_images, batch_size=1, drop_last=False)
+        self.test_queue = DataLoader(test_images, batch_size=self.batch_size, drop_last=False, num_workers=4)
 
     def _init_model(self):
-        
+
         M = Models()
         model = M.FPN(img_ch=3, output_ch=1)
+        
+        if torch.cuda.device_count() > 1 and self.args.mgpu:
+            print("Let's use", torch.cuda.device_count(), "GPUs!")
+            model = nn.DataParallel(model)
+
         self.model = model.to(self.device)
     
     def test(self):
@@ -92,6 +105,6 @@ class test_class(object):
 
 if __name__ == '__main__':
 
-    abnormality = 'ampulla-of-vater'
+    abnormality = 'vascular'
     test = test_class(abnormality)
     test.test()  

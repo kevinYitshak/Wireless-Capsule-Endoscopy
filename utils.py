@@ -1,26 +1,19 @@
-from sklearn.metrics import confusion_matrix
-import torch
-from numba import jit
 import os
+import random
+import subprocess
+
 import cv2
 import numpy as np
-from PIL import Image 
-import random 
-from albumentations import (
-    HorizontalFlip,
-    VerticalFlip,
-    Compose,
-    Transpose,
-    RandomRotate90,
-    ElasticTransform,
-    GridDistortion,
-    OpticalDistortion,
-    CLAHE,
-    OneOf,
-    RandomBrightnessContrast,
-    RandomGamma,
-    ShiftScaleRotate
-)
+import torch
+from albumentations import (CLAHE, Compose, ElasticTransform, GridDistortion,
+                            HorizontalFlip, OneOf, OpticalDistortion,
+                            RandomBrightnessContrast, RandomGamma,
+                            RandomRotate90, ShiftScaleRotate, Transpose,
+                            VerticalFlip)
+from numba import jit
+from PIL import Image
+from sklearn.metrics import confusion_matrix
+
 
 def metrics(pred, target, threshold=0.5):
 
@@ -127,4 +120,3 @@ class Augmentation(object):
         #     aug.append(self.aug)
         #     iter_max += 1
         return Compose(aug)
-

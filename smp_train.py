@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import argparse
 import cv2
 import numpy as np
 import segmentation_models_pytorch as smp
@@ -23,18 +24,25 @@ from dataloader import Angioectasias
 from models import Models, U_Net, R2U_Net, AttU_Net, R2AttU_Net
 from utils import AverageMeter, metrics
 
-
 class wce_angioectasias(object):
 
     def __init__(self, abnormality):
         super(wce_angioectasias, self).__init__()
 
         self.abnormality = abnormality
+        self._args()
         self._init_logger()
         self._init_device()
         self._init_dataset()
         self._init_model()
         self._init_params()
+
+    def _args(self):
+
+        parser = argparse.ArgumentParser(description='config')
+        parser.add_argument('--mgpu', default=False, help='Set true to use multi GPUs')
+
+        self.args = parser.parse_args()
 
     def _init_logger(self):
 
@@ -50,37 +58,38 @@ class wce_angioectasias(object):
 
     def _init_device(self):
 
-        os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+        # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-        if not torch.cuda.is_available():
-            print('GPU not available!')
-            self.device = 'cpu'
-        else:
-            print('GPU is available!')
-            cudnn.enabled = True
-            cudnn.benchmark = True
-            self.device = torch.device('cuda:{}'.format(0))
+        self.device = torch.device(
+            "cuda:0" if torch.cuda.is_available() else "cpu")
 
     def _init_dataset(self):
 
         train_img = Angioectasias(self.abnormality, mode='train')
         val_img = Angioectasias(self.abnormality, mode='val')
-        self.batch_size = 3
+        if self.args.mgpu:
+            self.batch_size = 28
+        else:
+            self.batch_size = 7
         self.train_queue = data.DataLoader(train_img, batch_size=self.batch_size,
-                                           drop_last=False, shuffle=True)
+                                           drop_last=False, shuffle=True, num_workers=4)
 
         self.val_queue = data.DataLoader(
-            val_img, batch_size=self.batch_size, shuffle=True)
+            val_img, batch_size=self.batch_size, shuffle=True, num_workers=4)
 
     def _init_model(self):
 
         M = Models()
         model = M.FPN(img_ch=3, output_ch=1)
 
+        if torch.cuda.device_count() > 1 and self.args.mgpu:
+            print("Let's use", torch.cuda.device_count(), "GPUs!")
+            model = nn.DataParallel(model)
+
         self.model = model.to(self.device)
 
     def _init_params(self):
-        
+
         self.end_epoch = 50
         self.loss_bce = smp.utils.losses.BCEWithLogitsLoss()
         self.loss_dice = smp.utils.losses.DiceLoss(activation='sigmoid')
@@ -119,14 +128,14 @@ class wce_angioectasias(object):
         self.best_dice = 0
 
         for epoch in range(0, self.end_epoch):
-            
+
             self.epoch = epoch
             print('Epoch: %d/%d' % (self.epoch + 1, self.end_epoch))
 
-            self._train()  
+            self._train()
 
             self.scheduler.step()
-            print('Decay LR: ', self.scheduler.get_lr())
+            # print('Decay LR: ', self.scheduler.get_lr())
 
             self._val()
 
@@ -138,7 +147,7 @@ class wce_angioectasias(object):
     def _train(self):
 
         train_logs, image, target, pred = self.train_epoch.run(self.train_queue)
-        print(train_logs)
+        # print(train_logs)
 
         self.writer.add_images('Train/Images', image, self.epoch)
         self.writer.add_images('Train/Masks/True', target, self.epoch)
@@ -152,7 +161,7 @@ class wce_angioectasias(object):
     def _val(self):
 
         valid_logs, image, target, pred = self.valid_epoch.run(self.val_queue)
-        print(valid_logs)
+        # print(valid_logs)
 
         self.writer.add_images('Val/Images', image, self.epoch)
         self.writer.add_images('Val/Masks/True', target, self.epoch)
@@ -180,7 +189,7 @@ class wce_angioectasias(object):
 if __name__ == '__main__':
 
     # 'polypoids', 'vascular', 'ampulla-of-vater', 'inflammatory'
-    abnormality = ['ampulla-of-vater']
+    abnormality = ['vascular']
 
     for name in abnormality:
         train_network = wce_angioectasias(name)
