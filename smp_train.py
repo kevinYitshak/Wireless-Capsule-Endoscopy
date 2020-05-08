@@ -17,7 +17,6 @@ from torch import optim
 from torch.autograd import Variable
 from torch.nn import init
 from torch.utils import data
-from torchsummary import summary
 from tqdm import tqdm
 
 from dataloader import Angioectasias
@@ -189,7 +188,7 @@ class wce_angioectasias(object):
 if __name__ == '__main__':
 
     # 'polypoids', 'vascular', 'ampulla-of-vater', 'inflammatory'
-    abnormality = ['vascular']
+    abnormality = ['ampulla-of-vater']
 
     for name in abnormality:
         train_network = wce_angioectasias(name)
