@@ -6,7 +6,7 @@ import numpy as np
 import os
 from natsort import natsorted
 from tqdm import tqdm
-from utils import AverageMeter, metrics, get_gpus_memory_info
+from utils import AverageMeter, metrics
 
 import torch 
 from torch.utils.data import DataLoader, Dataset
