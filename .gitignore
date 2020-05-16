@@ -1,0 +1,16 @@
+ampulla-of-vater/
+inflammatory/
+polypoids/
+__pycache__/
+Unet_Angioectasias.py
+aws_key/
+Angioectasias/
+Apthae/
+Bleeding/
+ChylousCysts/
+Lymphangectasias/
+Polypoids/
+Stenoses/
+Ulcers/
+WCE_Dataset/
+.vscode/
