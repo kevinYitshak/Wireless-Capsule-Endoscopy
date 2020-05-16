@@ -5,13 +5,10 @@ import torch.nn.functional as F
 import segmentation_models_pytorch as smp
 
 '''
-<<<<<<< HEAD
 smp.Unet(encoder_name='resnet34', encoder_depth=5, encoder_weights='imagenet',
         decoder_use_batchnorm=True, decoder_channels=(256, 128, 64, 32, 16),
-=======
-smp.Unet(encoder_name='resnet34', encoder_depth=5, encoder_weights='imagenet', 
-        decoder_use_batchnorm=True, decoder_channels=(256, 128, 64, 32, 16), 
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+smp.Unet(encoder_name='resnet34', encoder_depth=5, encoder_weights='imagenet',
+        decoder_use_batchnorm=True, decoder_channels=(256, 128, 64, 32, 16),
         decoder_attention_type=None, in_channels=3, classes=1, activation=None, aux_params=None)
 
 smp.FPN(encoder_name='resnet34', encoder_depth=5, encoder_weights='imagenet', decoder_pyramid_channels=256, decoder_segmentation_channels=128,
@@ -24,7 +21,6 @@ smp.PSPNet(encoder_name='resnet34', encoder_weights='imagenet', encoder_depth=3,
            psp_use_batchnorm=True, psp_dropout=0.2, in_channels=3, classes=1, activation=None, upsampling=8, aux_params=None)
 '''
 
-<<<<<<< HEAD
 
 class Models(object):
 
@@ -35,17 +31,15 @@ class Models(object):
                  de_ch=(512, 256, 128, 64, 32), LN_upsample=4,
                  PSP_upsample=8, PSP_out_ch=512,
                  activation=None, aux_params=None):
-=======
 class Models(object):
 
-    def __init__(self, en_depth=5, 
+    def __init__(self, en_depth=5,
                 de_usebn=True, de_attention='scse', encoder='se_resnext50_32x4d',
                 en_weights='imagenet', de_py_ch=256,
-                de_seg=128, de_merge='add', de_dp=0.2, 
+                de_seg=128, de_merge='add', de_dp=0.2,
                 de_ch=(512, 256, 128, 64, 32), LN_upsample=4,
                 PSP_upsample=8, PSP_out_ch=512,
                 activation=None, aux_params=None):
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         super(Models, self).__init__()
 
         self.encoder = encoder
@@ -58,27 +52,23 @@ class Models(object):
         self.activation = activation
 
     def Unet(self, img_ch, output_ch):
-<<<<<<< HEAD
         return smp.Unet(encoder_name=self.encoder,
                         encoder_depth=self.en_depth,
                         encoder_weights=self.en_weights,
                         decoder_use_batchnorm=self.de_bn,
                         decoder_channels=self.de_ch,
                         decoder_attention_type=self.de_attention,
-=======
-        return smp.Unet(encoder_name=self.encoder, 
-                        encoder_depth=self.en_depth, 
-                        encoder_weights=self.en_weights, 
-                        decoder_use_batchnorm=self.de_bn, 
-                        decoder_channels=self.de_ch, 
-                        decoder_attention_type=self.de_attention, 
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+        return smp.Unet(encoder_name=self.encoder,
+                        encoder_depth=self.en_depth,
+                        encoder_weights=self.en_weights,
+                        decoder_use_batchnorm=self.de_bn,
+                        decoder_channels=self.de_ch,
+                        decoder_attention_type=self.de_attention,
                         in_channels=img_ch,
                         classes=output_ch,
                         activation=None)
 
     def FPN(self, img_ch, output_ch):
-<<<<<<< HEAD
         return smp.FPN(encoder_name=self.encoder,
                        encoder_depth=self.en_depth,
                        encoder_weights=self.en_weights,
@@ -121,34 +111,33 @@ class conv_block(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(ch_out, ch_out, kernel_size=3,
                       stride=1, padding=1, bias=True),
-=======
-        return smp.FPN(encoder_name=self.encoder, 
+        return smp.FPN(encoder_name=self.encoder,
                         encoder_depth=self.en_depth,
-                        encoder_weights=self.en_weights, 
+                        encoder_weights=self.en_weights,
                         decoder_pyramid_channels=256,
                         decoder_segmentation_channels=128,
-                        decoder_merge_policy='add', 
-                        decoder_dropout=0.2, 
+                        decoder_merge_policy='add',
+                        decoder_dropout=0.2,
                         in_channels=img_ch,
                         classes=output_ch, activation=None,
                         upsampling=4, aux_params=None)
-    
+
     def Linknet(self, img_ch, output_ch):
-        return smp.Linknet(encoder_name=self.encoder, 
+        return smp.Linknet(encoder_name=self.encoder,
                         encoder_depth=self.en_depth,
                         encoder_weights=self.en_weights,
-                        decoder_use_batchnorm=False, 
+                        decoder_use_batchnorm=False,
                         in_channels=img_ch,
                         classes=output_ch, activation=None,
                         aux_params=None)
 
     def PSP(self, img_ch, output_ch):
-        return smp.PSPNet(encoder_name=self.encoder, 
+        return smp.PSPNet(encoder_name=self.encoder,
                         encoder_weights=self.en_weights,
-                        encoder_depth=3, 
+                        encoder_depth=3,
                         psp_out_channels=512,
-                        psp_use_batchnorm=False, 
-                        psp_dropout=0.2, 
+                        psp_use_batchnorm=False,
+                        psp_dropout=0.2,
                         in_channels=img_ch,
                         classes=output_ch, activation=None,
                         upsampling=8, aux_params=None)
@@ -162,12 +151,10 @@ class conv_block(nn.Module):
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True),
             nn.Conv2d(ch_out, ch_out, kernel_size=3,stride=1,padding=1,bias=True),
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True)
         )
 
-<<<<<<< HEAD
     def forward(self, x):
         x = self.conv(x)
         return x
@@ -222,7 +209,6 @@ class RRCNN_block(nn.Module):
             ch_in, ch_out, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
-=======
 
     def forward(self,x):
         x = self.conv(x)
@@ -258,10 +244,10 @@ class Recurrent_block(nn.Module):
 
             if i==0:
                 x1 = self.conv(x)
-            
+
             x1 = self.conv(x+x1)
         return x1
-        
+
 class RRCNN_block(nn.Module):
     def __init__(self,ch_in,ch_out,t=2):
         super(RRCNN_block,self).__init__()
@@ -272,30 +258,25 @@ class RRCNN_block(nn.Module):
         self.Conv_1x1 = nn.Conv2d(ch_in,ch_out,kernel_size=1,stride=1,padding=0)
 
     def forward(self,x):
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         x = self.Conv_1x1(x)
         x1 = self.RCNN(x)
         return x+x1
 
 
 class single_conv(nn.Module):
-<<<<<<< HEAD
     def __init__(self, ch_in, ch_out):
         super(single_conv, self).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(ch_in, ch_out, kernel_size=3,
                       stride=1, padding=1, bias=True),
-=======
     def __init__(self,ch_in,ch_out):
         super(single_conv,self).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(ch_in, ch_out, kernel_size=3,stride=1,padding=1,bias=True),
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
             nn.BatchNorm2d(ch_out),
             nn.ReLU(inplace=True)
         )
 
-<<<<<<< HEAD
     def forward(self, x):
         x = self.conv(x)
         return x
@@ -313,7 +294,6 @@ class Attention_block(nn.Module):
         self.W_x = nn.Sequential(
             nn.Conv2d(F_l, F_int, kernel_size=1,
                       stride=1, padding=0, bias=True),
-=======
     def forward(self,x):
         x = self.conv(x)
         return x
@@ -325,15 +305,13 @@ class Attention_block(nn.Module):
             nn.Conv2d(F_g, F_int, kernel_size=1,stride=1,padding=0,bias=True),
             nn.BatchNorm2d(F_int)
             )
-        
+
         self.W_x = nn.Sequential(
             nn.Conv2d(F_l, F_int, kernel_size=1,stride=1,padding=0,bias=True),
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
             nn.BatchNorm2d(F_int)
         )
 
         self.psi = nn.Sequential(
-<<<<<<< HEAD
             nn.Conv2d(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True),
             nn.BatchNorm2d(1),
             nn.Sigmoid()
@@ -342,16 +320,14 @@ class Attention_block(nn.Module):
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, g, x):
-=======
             nn.Conv2d(F_int, 1, kernel_size=1,stride=1,padding=0,bias=True),
             nn.BatchNorm2d(1),
             nn.Sigmoid()
         )
-        
+
         self.relu = nn.ReLU(inplace=True)
-        
+
     def forward(self,g,x):
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         g1 = self.W_g(g)
         x1 = self.W_x(x)
         psi = self.relu(g1+x1)
@@ -361,7 +337,6 @@ class Attention_block(nn.Module):
 
 
 class U_Net(nn.Module):
-<<<<<<< HEAD
     def __init__(self, img_ch=3, output_ch=1):
         super(U_Net, self).__init__()
 
@@ -390,10 +365,9 @@ class U_Net(nn.Module):
             64, output_ch, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
-=======
     def __init__(self,img_ch=3,output_ch=1):
         super(U_Net,self).__init__()
-        
+
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)
         self.dp = nn.Dropout(p=0.5)
 
@@ -408,10 +382,10 @@ class U_Net(nn.Module):
 
         self.Up4 = up_conv(ch_in=512,ch_out=256)
         self.Up_conv4 = conv_block(ch_in=512, ch_out=256)
-        
+
         self.Up3 = up_conv(ch_in=256,ch_out=128)
         self.Up_conv3 = conv_block(ch_in=256, ch_out=128)
-        
+
         self.Up2 = up_conv(ch_in=128,ch_out=64)
         self.Up_conv2 = conv_block(ch_in=128, ch_out=64)
 
@@ -419,17 +393,13 @@ class U_Net(nn.Module):
 
 
     def forward(self,x):
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         # encoding path
         x1 = self.Conv1(x)
 
         x2 = self.Maxpool(x1)
         x2 = self.Conv2(x2)
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+
         x3 = self.Maxpool(x2)
         x3 = self.Conv3(x3)
 
@@ -441,18 +411,14 @@ class U_Net(nn.Module):
         # x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
-<<<<<<< HEAD
         d5 = torch.cat((x4, d5), dim=1)
 
-=======
         d5 = torch.cat((x4,d5),dim=1)
-        
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+
         d5 = self.Up_conv5(d5)
         # d5 = self.dp(d5)
 
         d4 = self.Up4(d5)
-<<<<<<< HEAD
         d4 = torch.cat((x3, d4), dim=1)
         d4 = self.Up_conv4(d4)
 
@@ -462,7 +428,6 @@ class U_Net(nn.Module):
 
         d2 = self.Up2(d3)
         d2 = torch.cat((x1, d2), dim=1)
-=======
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_conv4(d4)
 
@@ -472,7 +437,6 @@ class U_Net(nn.Module):
 
         d2 = self.Up2(d3)
         d2 = torch.cat((x1,d2),dim=1)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         d2 = self.Up_conv2(d2)
 
         d1 = self.Conv_1x1(d2)
@@ -481,7 +445,6 @@ class U_Net(nn.Module):
 
 
 class R2U_Net(nn.Module):
-<<<<<<< HEAD
     def __init__(self, img_ch=3, output_ch=1, t=2):
         super(R2U_Net, self).__init__()
 
@@ -515,10 +478,9 @@ class R2U_Net(nn.Module):
             64, output_ch, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
-=======
     def __init__(self,img_ch=3,output_ch=1,t=2):
         super(R2U_Net,self).__init__()
-        
+
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)
         self.Upsample = nn.Upsample(scale_factor=2)
         self.dp = nn.Dropout(p=0.5)
@@ -526,23 +488,23 @@ class R2U_Net(nn.Module):
         self.RRCNN1 = RRCNN_block(ch_in=img_ch,ch_out=64,t=t)
 
         self.RRCNN2 = RRCNN_block(ch_in=64,ch_out=128,t=t)
-        
+
         self.RRCNN3 = RRCNN_block(ch_in=128,ch_out=256,t=t)
-        
+
         self.RRCNN4 = RRCNN_block(ch_in=256,ch_out=512,t=t)
-        
+
         self.RRCNN5 = RRCNN_block(ch_in=512,ch_out=1024,t=t)
-        
+
 
         self.Up5 = up_conv(ch_in=1024,ch_out=512)
         self.Up_RRCNN5 = RRCNN_block(ch_in=1024, ch_out=512,t=t)
-        
+
         self.Up4 = up_conv(ch_in=512,ch_out=256)
         self.Up_RRCNN4 = RRCNN_block(ch_in=512, ch_out=256,t=t)
-        
+
         self.Up3 = up_conv(ch_in=256,ch_out=128)
         self.Up_RRCNN3 = RRCNN_block(ch_in=256, ch_out=128,t=t)
-        
+
         self.Up2 = up_conv(ch_in=128,ch_out=64)
         self.Up_RRCNN2 = RRCNN_block(ch_in=128, ch_out=64,t=t)
 
@@ -550,17 +512,13 @@ class R2U_Net(nn.Module):
 
 
     def forward(self,x):
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         # encoding path
         x1 = self.RRCNN1(x)
 
         x2 = self.Maxpool(x1)
         x2 = self.RRCNN2(x2)
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+
         x3 = self.Maxpool(x2)
         x3 = self.RRCNN3(x3)
 
@@ -572,16 +530,12 @@ class R2U_Net(nn.Module):
         # x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
-<<<<<<< HEAD
         d5 = torch.cat((x4, d5), dim=1)
-=======
         d5 = torch.cat((x4,d5),dim=1)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         d5 = self.Up_RRCNN5(d5)
         # d5 = self.dp(x5)
 
         d4 = self.Up4(d5)
-<<<<<<< HEAD
         d4 = torch.cat((x3, d4), dim=1)
         d4 = self.Up_RRCNN4(d4)
 
@@ -591,7 +545,6 @@ class R2U_Net(nn.Module):
 
         d2 = self.Up2(d3)
         d2 = torch.cat((x1, d2), dim=1)
-=======
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_RRCNN4(d4)
 
@@ -601,7 +554,6 @@ class R2U_Net(nn.Module):
 
         d2 = self.Up2(d3)
         d2 = torch.cat((x1,d2),dim=1)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         d2 = self.Up_RRCNN2(d2)
 
         d1 = self.Conv_1x1(d2)
@@ -609,7 +561,6 @@ class R2U_Net(nn.Module):
         return d1
 
 
-<<<<<<< HEAD
 class AttU_Net(nn.Module):
     def __init__(self, img_ch=3, output_ch=1):
         super(AttU_Net, self).__init__()
@@ -643,12 +594,11 @@ class AttU_Net(nn.Module):
             64, output_ch, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
-=======
 
 class AttU_Net(nn.Module):
     def __init__(self,img_ch=3,output_ch=1):
         super(AttU_Net,self).__init__()
-        
+
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)
         self.dp = nn.Dropout(p=0.5)
 
@@ -665,11 +615,11 @@ class AttU_Net(nn.Module):
         self.Up4 = up_conv(ch_in=512,ch_out=256)
         self.Att4 = Attention_block(F_g=256,F_l=256,F_int=128)
         self.Up_conv4 = conv_block(ch_in=512, ch_out=256)
-        
+
         self.Up3 = up_conv(ch_in=256,ch_out=128)
         self.Att3 = Attention_block(F_g=128,F_l=128,F_int=64)
         self.Up_conv3 = conv_block(ch_in=256, ch_out=128)
-        
+
         self.Up2 = up_conv(ch_in=128,ch_out=64)
         self.Att2 = Attention_block(F_g=64,F_l=64,F_int=32)
         self.Up_conv2 = conv_block(ch_in=128, ch_out=64)
@@ -678,17 +628,13 @@ class AttU_Net(nn.Module):
 
 
     def forward(self,x):
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         # encoding path
         x1 = self.Conv1(x)
 
         x2 = self.Maxpool(x1)
         x2 = self.Conv2(x2)
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+
         x3 = self.Maxpool(x2)
         x3 = self.Conv3(x3)
 
@@ -701,18 +647,14 @@ class AttU_Net(nn.Module):
 
         # decoding + concat path
         d5 = self.Up5(x5)
-<<<<<<< HEAD
         x4 = self.Att5(g=d5, x=x4)
         d5 = torch.cat((x4, d5), dim=1)
-=======
         x4 = self.Att5(g=d5,x=x4)
-        d5 = torch.cat((x4,d5),dim=1)        
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+        d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_conv5(d5)
         #d5 = self.dp(d5)
 
         d4 = self.Up4(d5)
-<<<<<<< HEAD
         x3 = self.Att4(g=d4, x=x3)
         d4 = torch.cat((x3, d4), dim=1)
         d4 = self.Up_conv4(d4)
@@ -725,7 +667,6 @@ class AttU_Net(nn.Module):
         d2 = self.Up2(d3)
         x1 = self.Att2(g=d2, x=x1)
         d2 = torch.cat((x1, d2), dim=1)
-=======
         x3 = self.Att4(g=d4,x=x3)
         d4 = torch.cat((x3,d4),dim=1)
         d4 = self.Up_conv4(d4)
@@ -738,7 +679,6 @@ class AttU_Net(nn.Module):
         d2 = self.Up2(d3)
         x1 = self.Att2(g=d2,x=x1)
         d2 = torch.cat((x1,d2),dim=1)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         d2 = self.Up_conv2(d2)
 
         d1 = self.Conv_1x1(d2)
@@ -747,7 +687,6 @@ class AttU_Net(nn.Module):
 
 
 class R2AttU_Net(nn.Module):
-<<<<<<< HEAD
     def __init__(self, img_ch=3, output_ch=1, t=2):
         super(R2AttU_Net, self).__init__()
 
@@ -785,10 +724,9 @@ class R2AttU_Net(nn.Module):
             64, output_ch, kernel_size=1, stride=1, padding=0)
 
     def forward(self, x):
-=======
     def __init__(self,img_ch=3,output_ch=1,t=2):
         super(R2AttU_Net,self).__init__()
-        
+
         self.Maxpool = nn.MaxPool2d(kernel_size=2,stride=2)
         self.Upsample = nn.Upsample(scale_factor=2)
         self.dp = nn.Dropout(p=0.5)
@@ -796,26 +734,26 @@ class R2AttU_Net(nn.Module):
         self.RRCNN1 = RRCNN_block(ch_in=img_ch,ch_out=64,t=t)
 
         self.RRCNN2 = RRCNN_block(ch_in=64,ch_out=128,t=t)
-        
+
         self.RRCNN3 = RRCNN_block(ch_in=128,ch_out=256,t=t)
-        
+
         self.RRCNN4 = RRCNN_block(ch_in=256,ch_out=512,t=t)
-        
+
         self.RRCNN5 = RRCNN_block(ch_in=512,ch_out=1024,t=t)
-        
+
 
         self.Up5 = up_conv(ch_in=1024,ch_out=512)
         self.Att5 = Attention_block(F_g=512,F_l=512,F_int=256)
         self.Up_RRCNN5 = RRCNN_block(ch_in=1024, ch_out=512,t=t)
-        
+
         self.Up4 = up_conv(ch_in=512,ch_out=256)
         self.Att4 = Attention_block(F_g=256,F_l=256,F_int=128)
         self.Up_RRCNN4 = RRCNN_block(ch_in=512, ch_out=256,t=t)
-        
+
         self.Up3 = up_conv(ch_in=256,ch_out=128)
         self.Att3 = Attention_block(F_g=128,F_l=128,F_int=64)
         self.Up_RRCNN3 = RRCNN_block(ch_in=256, ch_out=128,t=t)
-        
+
         self.Up2 = up_conv(ch_in=128,ch_out=64)
         self.Att2 = Attention_block(F_g=64,F_l=64,F_int=32)
         self.Up_RRCNN2 = RRCNN_block(ch_in=128, ch_out=64,t=t)
@@ -824,17 +762,13 @@ class R2AttU_Net(nn.Module):
 
 
     def forward(self,x):
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         # encoding path
         x1 = self.RRCNN1(x)
 
         x2 = self.Maxpool(x1)
         x2 = self.RRCNN2(x2)
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+
         x3 = self.Maxpool(x2)
         x3 = self.RRCNN3(x3)
 
@@ -846,7 +780,6 @@ class R2AttU_Net(nn.Module):
         # x5 = self.dp(x5)
         # decoding + concat path
         d5 = self.Up5(x5)
-<<<<<<< HEAD
         x4 = self.Att5(g=d5, x=x4)
         d5 = torch.cat((x4, d5), dim=1)
         d5 = self.Up_RRCNN5(d5)
@@ -865,12 +798,11 @@ class R2AttU_Net(nn.Module):
         d2 = self.Up2(d3)
         x1 = self.Att2(g=d2, x=x1)
         d2 = torch.cat((x1, d2), dim=1)
-=======
         x4 = self.Att5(g=d5,x=x4)
         d5 = torch.cat((x4,d5),dim=1)
         d5 = self.Up_RRCNN5(d5)
         # d5 = self.dp(d5)
-        
+
         d4 = self.Up4(d5)
         x3 = self.Att4(g=d4,x=x3)
         d4 = torch.cat((x3,d4),dim=1)
@@ -884,7 +816,6 @@ class R2AttU_Net(nn.Module):
         d2 = self.Up2(d3)
         x1 = self.Att2(g=d2,x=x1)
         d2 = torch.cat((x1,d2),dim=1)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         d2 = self.Up_RRCNN2(d2)
 
         d1 = self.Conv_1x1(d2)

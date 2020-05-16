@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 # test.py
-=======
 #test.py
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
 
 import argparse
 import cv2
@@ -12,11 +9,8 @@ from natsort import natsorted
 from tqdm import tqdm
 from utils import AverageMeter, metrics
 
-<<<<<<< HEAD
 import torch
-=======
-import torch 
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms, utils
 import torchvision.transforms as transforms
@@ -26,10 +20,7 @@ import torch.nn as nn
 from models import U_Net, R2U_Net, AttU_Net, R2AttU_Net, Models
 from dataloader import Angioectasias
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
 class test_class(object):
 
     def __init__(self, abnormality):
@@ -47,15 +38,12 @@ class test_class(object):
 
         self.args = parser.parse_args()
 
-<<<<<<< HEAD
     def _init_device(self):
         self.device = torch.device(
             "cuda:0" if torch.cuda.is_available() else "cpu")
-=======
 
     def _init_device(self):
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
 
     def _init_dataset(self):
 
@@ -65,32 +53,23 @@ class test_class(object):
             self.batch_size = 7
 
         test_images = Angioectasias(self.abnormality, mode='test')
-<<<<<<< HEAD
         self.test_queue = DataLoader(
             test_images, batch_size=self.batch_size, drop_last=False, num_workers=4)
-=======
         self.test_queue = DataLoader(test_images, batch_size=self.batch_size, drop_last=False, num_workers=4)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
 
     def _init_model(self):
 
         M = Models()
         model = M.FPN(img_ch=3, output_ch=1)
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+
         if torch.cuda.device_count() > 1 and self.args.mgpu:
             print("Let's use", torch.cuda.device_count(), "GPUs!")
             model = nn.DataParallel(model)
 
         self.model = model.to(self.device)
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+
     def test(self):
         test_path = './' + abnormality + '/test/images'
         input_files = natsorted(os.listdir(test_path))
@@ -99,13 +78,10 @@ class test_class(object):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-<<<<<<< HEAD
         self.model.load_state_dict(torch.load('./' + self.abnormality + '/2020-04-30~07:18:12'
                                               + '/ckpt/best_weights.pth.tar')['state_dict'])
-=======
         self.model.load_state_dict(torch.load('./' + self.abnormality + '/2020-04-30~07:18:12' \
             + '/ckpt/best_weights.pth.tar')['state_dict'])
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         self.model.eval()
 
         self.test_dice = AverageMeter()
@@ -132,7 +108,6 @@ class test_class(object):
                 out = out * 255
                 out.astype('uint8')
                 cv2.imwrite(save_path + input_files[k], out)
-<<<<<<< HEAD
 
         print('Acc: {:.4f}, Sen: {:.4f}, Spe: {:.4f}, Dice: {:.4f}'
               .format(self.test_accuracy.mloss,
@@ -140,21 +115,16 @@ class test_class(object):
                       self.test_specificity.mloss,
                       self.test_dice.mloss))
 
-=======
-        
+
         print('Acc: {:.4f}, Sen: {:.4f}, Spe: {:.4f}, Dice: {:.4f}'\
             .format(self.test_accuracy.mloss,
                     self.test_sensitivity.mloss,
                     self.test_specificity.mloss,
                     self.test_dice.mloss))
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
 
 if __name__ == '__main__':
 
     abnormality = 'vascular'
     test = test_class(abnormality)
-<<<<<<< HEAD
     test.test()
-=======
-    test.test()  
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
+    test.test()

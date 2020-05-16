@@ -34,12 +34,9 @@ class wce_angioectasias:
     def _args(self):
 
         parser = argparse.ArgumentParser(description="config")
-<<<<<<< HEAD
         parser.add_argument("--mgpu", default=False,
                             help="Set true to use multi GPUs")
-=======
         parser.add_argument("--mgpu", default=False, help="Set true to use multi GPUs")
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
 
         self.args = parser.parse_args()
 
@@ -59,12 +56,9 @@ class wce_angioectasias:
 
         # os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-<<<<<<< HEAD
         self.device = torch.device(
             "cuda:0" if torch.cuda.is_available() else "cpu")
-=======
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
 
     def _init_dataset(self):
 
@@ -75,12 +69,9 @@ class wce_angioectasias:
         else:
             self.batch_size = 7
         self.train_queue = data.DataLoader(
-<<<<<<< HEAD
             train_img, batch_size=self.batch_size, drop_last=False,
             shuffle=True, num_workers=4
-=======
             train_img, batch_size=self.batch_size, drop_last=False, shuffle=True, num_workers=4
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         )
 
         self.val_queue = data.DataLoader(
@@ -103,24 +94,18 @@ class wce_angioectasias:
         self.end_epoch = 10
         self.loss_bce = smp.utils.losses.BCEWithLogitsLoss()
         self.loss_dice = smp.utils.losses.DiceLoss(activation="sigmoid")
-<<<<<<< HEAD
         self.loss = smp.utils.losses.base.SumOfLosses(
             self.loss_bce, self.loss_dice)
-=======
         self.loss = smp.utils.losses.base.SumOfLosses(self.loss_bce, self.loss_dice)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
 
         self.metrics = [
             smp.utils.metrics.IoU(activation="sigmoid"),
             smp.utils.metrics.Fscore(activation="sigmoid"),
             smp.utils.metrics.Recall(activation="sigmoid"),
         ]
-<<<<<<< HEAD
         self.optimizer = torch.optim.Adamax(
             [dict(params=self.model.parameters(), lr=1e-3), ])
-=======
         self.optimizer = torch.optim.Adamax([dict(params=self.model.parameters(), lr=1e-3),])
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         self.scheduler = optim.lr_scheduler.CosineAnnealingLR(
             self.optimizer, T_max=len(self.train_queue)
         )
@@ -137,12 +122,9 @@ class wce_angioectasias:
         )
 
         self.valid_epoch = smp.utils.train.ValidEpoch(
-<<<<<<< HEAD
             self.model, loss=self.loss, metrics=self.metrics,
             device=self.device, verbose=True,
-=======
             self.model, loss=self.loss, metrics=self.metrics, device=self.device, verbose=True,
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         )
 
         self.best_dice = 0
@@ -169,17 +151,13 @@ class wce_angioectasias:
 
     def _train(self):
 
-<<<<<<< HEAD
         train_logs, image, target, pred = self.train_epoch.run(
             self.train_queue)
-=======
         train_logs, image, target, pred = self.train_epoch.run(self.train_queue)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         # print(train_logs)
 
         self.writer.add_images("Train/Images", image, self.epoch)
         self.writer.add_images("Train/Masks/True", target, self.epoch)
-<<<<<<< HEAD
         self.writer.add_images(
             "Train/Masks/pred", (pred > 0.5).float(), self.epoch)
 
@@ -189,14 +167,12 @@ class wce_angioectasias:
         )
         self.writer.add_scalar(
             "Train/Sen", train_logs["sensitivity"], self.epoch)
-=======
         self.writer.add_images("Train/Masks/pred", (pred > 0.5).float(), self.epoch)
 
         self.writer.add_scalar(
             "Train/loss", train_logs["bce_with_logits_loss + dice_loss"], self.epoch
         )
         self.writer.add_scalar("Train/Sen", train_logs["sensitivity"], self.epoch)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         self.writer.add_scalar("Train/IOU", train_logs["iou"], self.epoch)
         self.writer.add_scalar("Train/Dice", train_logs["dice"], self.epoch)
 
@@ -207,7 +183,6 @@ class wce_angioectasias:
 
         self.writer.add_images("Val/Images", image, self.epoch)
         self.writer.add_images("Val/Masks/True", target, self.epoch)
-<<<<<<< HEAD
         self.writer.add_images(
             "Val/Masks/pred", (pred > 0.5).float(), self.epoch)
 
@@ -217,14 +192,12 @@ class wce_angioectasias:
         )
         self.writer.add_scalar(
             "Val/Sen", valid_logs["sensitivity"], self.epoch)
-=======
         self.writer.add_images("Val/Masks/pred", (pred > 0.5).float(), self.epoch)
 
         self.writer.add_scalar(
             "Val/loss", valid_logs["bce_with_logits_loss + dice_loss"], self.epoch
         )
         self.writer.add_scalar("Val/Sen", valid_logs["sensitivity"], self.epoch)
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
         self.writer.add_scalar("Val/IOU", valid_logs["iou"], self.epoch)
         self.writer.add_scalar("Val/Dice", valid_logs["dice"], self.epoch)
 
@@ -236,12 +209,9 @@ class wce_angioectasias:
 
             ckpt_file_path = self.path + "/ckpt/best_weights.pth.tar"
             torch.save(
-<<<<<<< HEAD
                 # {"epoch": self.epoch, "state_dict": self.model.state_dict(), },
                 # ckpt_file_path
-=======
                 {"epoch": self.epoch, "state_dict": self.model.state_dict(),}, ckpt_file_path
->>>>>>> 365128f9825ef9e15cbcf8339907a76d659579c8
             )
 
 
