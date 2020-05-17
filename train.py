@@ -75,7 +75,7 @@ class wce_angioectasias(object):
     def _init_device(self):
 
         os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-        
+
         if not torch.cuda.is_available():
             print('GPU not available!')
             self.device = 'cpu'
@@ -112,7 +112,7 @@ class wce_angioectasias(object):
     def run(self):
 
         self.end_epoch = 50
-        
+
         self.best_dice = 0
         #val_meter
         self.val_loss_meter = AverageMeter()
@@ -129,14 +129,14 @@ class wce_angioectasias(object):
         self.tr_dice = AverageMeter()
 
         for epoch in range(self.end_epoch):
-            
+
             self.epoch = epoch
             print('Epoch: %d/%d' % (self.epoch + 1, self.end_epoch))
 
             self.train()
             self.scheduler.step()
             # print('Decay LR: ', self.scheduler.get_lr())
-            
+
             #train
             self.train_loss_meter.reset()
             self.train_accuracy.reset()
@@ -167,7 +167,7 @@ class wce_angioectasias(object):
 
             input = input.to(device=self.device, dtype=torch.float32)
             target = target.to(device=self.device, dtype=torch.float32)
-            
+
             predicts = self.model(input)
             predicts_prob = torch.sigmoid(predicts)
             self.dice = DiceLoss()
@@ -207,7 +207,7 @@ class wce_angioectasias(object):
 
         self.model.eval()
         tbar = tqdm(self.val_queue)
-        
+
         for step, (input, target) in enumerate(tbar):
 
             input = input.to(device=self.device, dtype=torch.float32)
@@ -254,7 +254,7 @@ class wce_angioectasias(object):
         self.writer.add_scalar('Val/Acc', self.val_accuracy.mloss, self.epoch)
         self.writer.add_scalar('Val/Sen', self.val_sensitivity.mloss, self.epoch)
         self.writer.add_scalar('Val/Spe', self.val_specificity.mloss, self.epoch)
-    
+
     def test(self):
         test_images = Angioectasias(self.abnormality, mode='test')
         self.test_queue = data.DataLoader(test_images, batch_size=1, drop_last=False)
@@ -266,7 +266,7 @@ class wce_angioectasias(object):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        self.model.load_state_dict(torch.load('./' + self.abnormality + '/' + self.d 
+        self.model.load_state_dict(torch.load('./' + self.abnormality + '/' + self.d
                                               + '/ckpt/best_weights.pth.tar')['state_dict'])
         self.model.eval()
 
@@ -306,6 +306,6 @@ if __name__ == '__main__':
     # 'polypoids', 'vascular', 'ampulla-of-vater', 'inflammatory'
     abnormality = ['polypoids']
 
-    for name in abnormality:               
+    for name in abnormality:
         train_network = wce_angioectasias(name)
         train_network.run()
