@@ -35,7 +35,6 @@ class wce_angioectasias:
 
         parser = argparse.ArgumentParser(description="config")
         parser.add_argument("--mgpu", default=False, help="Set true to use multi GPUs")
-        parser.add_argument("--mgpu", default=False, help="Set true to use multi GPUs")
 
         self.args = parser.parse_args()
 
@@ -104,9 +103,6 @@ class wce_angioectasias:
         self.optimizer = torch.optim.Adamax(
             [dict(params=self.model.parameters(), lr=1e-3),]
         )
-        self.optimizer = torch.optim.Adamax(
-            [dict(params=self.model.parameters(), lr=1e-3),]
-        )
         self.scheduler = optim.lr_scheduler.CosineAnnealingLR(
             self.optimizer, T_max=len(self.train_queue)
         )
@@ -135,7 +131,7 @@ class wce_angioectasias:
         for epoch in range(0, self.end_epoch):
 
             self.epoch = epoch
-            print("Epoch: %d/%d" % (self.epoch + 1, self.end_epoch))
+            print("----- Epoch: %d/%d -----" % (self.epoch + 1, self.end_epoch))
 
             self._train()
 

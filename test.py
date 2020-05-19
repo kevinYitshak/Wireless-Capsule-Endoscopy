@@ -1,5 +1,4 @@
 # test.py
-# test.py
 
 import argparse
 import cv2
@@ -73,14 +72,6 @@ class test_class(object):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        self.model.load_state_dict(
-            torch.load(
-                "./"
-                + self.abnormality
-                + "/2020-04-30~07:18:12"
-                + "/ckpt/best_weights.pth.tar"
-            )["state_dict"]
-        )
         self.model.load_state_dict(
             torch.load(
                 "./"

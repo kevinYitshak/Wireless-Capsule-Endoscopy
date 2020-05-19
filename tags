@@ -1,0 +1,141 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Angioectasias	dataloader.py	/^class Angioectasias(Dataset):$/;"	c
+AttU_Net	models.py	/^class AttU_Net(nn.Module):$/;"	c
+Attention_block	models.py	/^class Attention_block(nn.Module):$/;"	c
+Augmentation	utils.py	/^class Augmentation(object):$/;"	c
+AverageMeter	utils.py	/^class AverageMeter(object):$/;"	c
+DiceCoeff	dice_loss.py	/^class DiceCoeff(Function):$/;"	c
+DiceLoss	loss.py	/^class DiceLoss(nn.Module):$/;"	c
+FPN	models.py	/^    def FPN(self, img_ch, output_ch):$/;"	m	class:Models
+Linknet	models.py	/^    def Linknet(self, img_ch, output_ch):$/;"	m	class:Models
+Linknet	models.py	/^    def Linknet(self, img_ch, output_ch):$/;"	m	class:conv_block
+Models	models.py	/^class Models(object):$/;"	c
+PSP	models.py	/^    def PSP(self, img_ch, output_ch):$/;"	m	class:Models
+PSP	models.py	/^    def PSP(self, img_ch, output_ch):$/;"	m	class:conv_block
+R2AttU_Net	models.py	/^class R2AttU_Net(nn.Module):$/;"	c
+R2U_Net	models.py	/^class R2U_Net(nn.Module):$/;"	c
+RRCNN_block	models.py	/^class RRCNN_block(nn.Module):$/;"	c
+Recurrent_block	models.py	/^class Recurrent_block(nn.Module):$/;"	c
+U_Net	models.py	/^class U_Net(nn.Module):$/;"	c
+Unet	models.py	/^    def Unet(self, img_ch, output_ch):$/;"	m	class:Models
+__getitem__	dataloader.py	/^    def __getitem__(self, index):$/;"	m	class:Angioectasias	file:
+__init__	dataloader.py	/^    def __init__(self, abnormality, mode):$/;"	m	class:Angioectasias
+__init__	loss.py	/^    def __init__(self):$/;"	m	class:DiceLoss
+__init__	models.py	/^    def __init__(self, F_g, F_l, F_int):$/;"	m	class:Attention_block
+__init__	models.py	/^    def __init__(self, ch_in, ch_out):$/;"	m	class:conv_block
+__init__	models.py	/^    def __init__(self, ch_in, ch_out):$/;"	m	class:single_conv
+__init__	models.py	/^    def __init__(self, ch_in, ch_out):$/;"	m	class:up_conv
+__init__	models.py	/^    def __init__(self, ch_in, ch_out, t=2):$/;"	m	class:RRCNN_block
+__init__	models.py	/^    def __init__(self, ch_out, t=2):$/;"	m	class:Recurrent_block
+__init__	models.py	/^    def __init__(self, en_depth=5,$/;"	m	class:Models
+__init__	models.py	/^    def __init__(self, img_ch=3, output_ch=1):$/;"	m	class:AttU_Net
+__init__	models.py	/^    def __init__(self, img_ch=3, output_ch=1):$/;"	m	class:U_Net
+__init__	models.py	/^    def __init__(self, img_ch=3, output_ch=1, t=2):$/;"	m	class:R2AttU_Net
+__init__	models.py	/^    def __init__(self, img_ch=3, output_ch=1, t=2):$/;"	m	class:R2U_Net
+__init__	models.py	/^    def __init__(self,F_g,F_l,F_int):$/;"	m	class:Attention_block
+__init__	models.py	/^    def __init__(self,ch_in,ch_out):$/;"	m	class:conv_block
+__init__	models.py	/^    def __init__(self,ch_in,ch_out):$/;"	m	class:single_conv
+__init__	models.py	/^    def __init__(self,ch_in,ch_out):$/;"	m	class:up_conv
+__init__	models.py	/^    def __init__(self,ch_in,ch_out,t=2):$/;"	m	class:RRCNN_block
+__init__	models.py	/^    def __init__(self,ch_out,t=2):$/;"	m	class:Recurrent_block
+__init__	models.py	/^    def __init__(self,img_ch=3,output_ch=1):$/;"	m	class:AttU_Net
+__init__	models.py	/^    def __init__(self,img_ch=3,output_ch=1):$/;"	m	class:U_Net
+__init__	models.py	/^    def __init__(self,img_ch=3,output_ch=1,t=2):$/;"	m	class:R2AttU_Net
+__init__	models.py	/^    def __init__(self,img_ch=3,output_ch=1,t=2):$/;"	m	class:R2U_Net
+__init__	smp_train.py	/^    def __init__(self, abnormality):$/;"	m	class:wce_angioectasias
+__init__	test.py	/^    def __init__(self, abnormality):$/;"	m	class:test_class
+__init__	train.py	/^    def __init__(self, abnormality):$/;"	m	class:wce_angioectasias
+__init__	utils.py	/^    def __init__(self):$/;"	m	class:Augmentation
+__init__	utils.py	/^    def __init__(self):$/;"	m	class:AverageMeter
+__init__	utils.py	/^    def __init__(self, img_path, images, abnormality):$/;"	m	class:mean_std
+__len__	dataloader.py	/^    def __len__(self):$/;"	m	class:Angioectasias	file:
+_args	smp_train.py	/^    def _args(self):$/;"	m	class:wce_angioectasias
+_args	test.py	/^    def _args(self):$/;"	m	class:test_class
+_aug	utils.py	/^    def _aug(self):$/;"	m	class:Augmentation
+_init_dataset	smp_train.py	/^    def _init_dataset(self):$/;"	m	class:wce_angioectasias
+_init_dataset	test.py	/^    def _init_dataset(self):$/;"	m	class:test_class
+_init_dataset	train.py	/^    def _init_dataset(self):$/;"	m	class:wce_angioectasias
+_init_device	smp_train.py	/^    def _init_device(self):$/;"	m	class:wce_angioectasias
+_init_device	test.py	/^    def _init_device(self):$/;"	m	class:test_class
+_init_device	train.py	/^    def _init_device(self):$/;"	m	class:wce_angioectasias
+_init_logger	smp_train.py	/^    def _init_logger(self):$/;"	m	class:wce_angioectasias
+_init_logger	train.py	/^    def _init_logger(self):$/;"	m	class:wce_angioectasias
+_init_model	smp_train.py	/^    def _init_model(self):$/;"	m	class:wce_angioectasias
+_init_model	test.py	/^    def _init_model(self):$/;"	m	class:test_class
+_init_model	train.py	/^    def _init_model(self):$/;"	m	class:wce_angioectasias
+_init_params	smp_train.py	/^    def _init_params(self):$/;"	m	class:wce_angioectasias
+_read	utils.py	/^    def _read(self):$/;"	m	class:mean_std
+_run	smp_train.py	/^    def _run(self):$/;"	m	class:wce_angioectasias
+_train	smp_train.py	/^    def _train(self):$/;"	m	class:wce_angioectasias
+_val	smp_train.py	/^    def _val(self):$/;"	m	class:wce_angioectasias
+abnormality	test.py	/^    abnormality = "vascular"$/;"	v	class:test_class
+abnormality	train.py	/^    abnormality = ['polypoids']$/;"	v	class:wce_angioectasias
+backward	dice_loss.py	/^    def backward(self, grad_output):$/;"	m	class:DiceCoeff
+compute_scores	performance_analysis.py	/^def compute_scores(gndPath, predPath):$/;"	f
+confusion_matrix	performance_analysis.py	/^def confusion_matrix(gnd, pre, TN, FP, FN, TP):$/;"	f
+conv_block	models.py	/^class conv_block(nn.Module):$/;"	c
+dice_coeff	dice_loss.py	/^def dice_coeff(input, target):$/;"	f
+dir	data_aug.py	/^dir = 'C:\/Users\/kevin\/Documents\/IISc\/WCE\/WCE_Dataset\/VillousOedemas\/data'$/;"	v
+dir_mask	data_aug.py	/^dir_mask = 'C:\/Users\/kevin\/Documents\/IISc\/WCE\/WCE_Dataset\/VillousOedemas\/annotations'$/;"	v
+forward	dice_loss.py	/^    def forward(self, input, target):$/;"	m	class:DiceCoeff
+forward	loss.py	/^    def forward(self, y_pred, y_true):$/;"	m	class:DiceLoss
+forward	models.py	/^    def forward(self, g, x):$/;"	m	class:Attention_block
+forward	models.py	/^    def forward(self, x):$/;"	m	class:AttU_Net
+forward	models.py	/^    def forward(self, x):$/;"	m	class:R2AttU_Net
+forward	models.py	/^    def forward(self, x):$/;"	m	class:R2U_Net
+forward	models.py	/^    def forward(self, x):$/;"	m	class:RRCNN_block
+forward	models.py	/^    def forward(self, x):$/;"	m	class:Recurrent_block
+forward	models.py	/^    def forward(self, x):$/;"	m	class:U_Net
+forward	models.py	/^    def forward(self, x):$/;"	m	class:conv_block
+forward	models.py	/^    def forward(self, x):$/;"	m	class:single_conv
+forward	models.py	/^    def forward(self, x):$/;"	m	class:up_conv
+forward	models.py	/^    def forward(self,g,x):$/;"	m	class:Attention_block
+forward	models.py	/^    def forward(self,x):$/;"	m	class:AttU_Net
+forward	models.py	/^    def forward(self,x):$/;"	m	class:Attention_block
+forward	models.py	/^    def forward(self,x):$/;"	m	class:R2AttU_Net
+forward	models.py	/^    def forward(self,x):$/;"	m	class:R2U_Net
+forward	models.py	/^    def forward(self,x):$/;"	m	class:RRCNN_block
+forward	models.py	/^    def forward(self,x):$/;"	m	class:Recurrent_block
+forward	models.py	/^    def forward(self,x):$/;"	m	class:U_Net
+forward	models.py	/^    def forward(self,x):$/;"	m	class:up_conv
+gaussian	data_aug.py	/^gaussian = np.random.normal(0, 0.01, 12)$/;"	v
+get_scores	performance_analysis.py	/^def get_scores(TN, FP, FN, TP):$/;"	f
+gndPath	performance_analysis.py	/^gndPath = "D:\/IISc\/Python\/Neural Style Transfer\/Final_NST\/_masks"$/;"	v
+images	data_aug.py	/^images = os.listdir(dir)$/;"	v
+img	data_aug.py	/^        img = img + val$/;"	v
+img	data_aug.py	/^    img = cv2.imread(os.path.join(dir, im))$/;"	v
+img_reshape	data_aug.py	/^    img_reshape = img_reshape - m$/;"	v
+img_reshape	data_aug.py	/^    img_reshape = np.reshape(img, (img.shape[0]*img.shape[1], 3))$/;"	v
+init_func	train.py	/^    def init_func(m):$/;"	f	function:init_weights
+init_weights	train.py	/^def init_weights(net, init_type='normal', gain=0.02):$/;"	f
+kid1	smp_train.py	/^    kid1 = [$/;"	v	class:wce_angioectasias
+m	data_aug.py	/^    m = np.mean(img_reshape, axis=0)$/;"	v
+mask	data_aug.py	/^    mask = cv2.imread(os.path.join(dir_mask, mask_name))$/;"	v
+mask_name	data_aug.py	/^    mask_name = im.split('.')[0] + 'm.png'$/;"	v
+masks	data_aug.py	/^masks = os.listdir(dir_mask)$/;"	v
+mean_std	utils.py	/^class mean_std(object):$/;"	c
+metrics	utils.py	/^def metrics(pred, target, threshold=0.5):$/;"	f
+mloss	utils.py	/^    def mloss(self):$/;"	m	class:AverageMeter
+pc_values	data_aug.py	/^    pc_values = pca.explained_variance_$/;"	v
+pc_vector	data_aug.py	/^    pc_vector = pca.components_$/;"	v
+pca	data_aug.py	/^    pca = PCA(n_components=3)$/;"	v
+predPath	performance_analysis.py	/^predPath = "D:\/IISc\/Python\/Neural Style Transfer\/Final_NST\/Preds4\/new_contentpredictions"$/;"	v
+reset	utils.py	/^    def reset(self):$/;"	m	class:AverageMeter
+run	train.py	/^    def run(self):$/;"	m	class:wce_angioectasias
+single_conv	models.py	/^class single_conv(nn.Module):$/;"	c
+test	test.py	/^    def test(self):$/;"	m	class:test_class
+test	test.py	/^    test = test_class(abnormality)$/;"	v	class:test_class
+test	train.py	/^    def test(self):$/;"	m	class:wce_angioectasias
+test_class	test.py	/^class test_class(object):$/;"	c
+train	train.py	/^    def train(self):$/;"	m	class:wce_angioectasias
+up_conv	models.py	/^class up_conv(nn.Module):$/;"	c
+update	utils.py	/^    def update(self, val, n=1):$/;"	m	class:AverageMeter
+val	data_aug.py	/^        val = np.sum(np.dot(pc_vector, pc_values.T))$/;"	v
+val	train.py	/^    def val(self):$/;"	m	class:wce_angioectasias
+wce_angioectasias	smp_train.py	/^class wce_angioectasias:$/;"	c
+wce_angioectasias	train.py	/^class wce_angioectasias(object):$/;"	c

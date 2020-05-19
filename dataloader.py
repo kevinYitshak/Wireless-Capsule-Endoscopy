@@ -1,7 +1,6 @@
 # dataloader.py
 
 import os
-import random
 from natsort import natsorted
 import numpy as np
 import cv2

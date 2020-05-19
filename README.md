@@ -9,6 +9,6 @@ help of an external library called 'Alubmentation'
 which uses cv2 rather than PIL, for faster
 augmentation.
 
-The training and testing are written with an help
-of another library called smp segmentation models
+For better initialization for training the models,
+I used an another library called smp segmentation models
 pytorch.
