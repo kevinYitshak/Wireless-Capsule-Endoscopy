@@ -19,7 +19,6 @@ smp.PSPNet(encoder_name='resnet34', encoder_weights='imagenet', encoder_depth=3,
            psp_use_batchnorm=True, psp_dropout=0.2, in_channels=3, classes=1, activation=None, upsampling=8, aux_params=None)
 """
 
-
 class Models(object):
     def __init__(
         self,
